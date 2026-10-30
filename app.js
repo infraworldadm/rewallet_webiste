@@ -311,7 +311,7 @@
         <div class="stats3"><div><b>${fmt(k.pending)}</b><span>Pending</span></div><div><b>${fmt(k.available)}</b><span>Available</span></div><div><b>${fmt(k.claimed)}</b><span>Claimed</span></div></div>
         <div class="card chartc"><div class="ch-h"><span class="lab">Last 7 days</span><b>+${fmt(k.available * .4)} USDT</b></div><div class="bars">${[30, 45, 28, 60, 52, 75, 90].map((h, i) => `<i data-h="${h}"><em>${'MTWTFSS'[i]}</em></i>`).join('')}</div></div>
         <button class="pbtn c-go" ${k.available ? '' : 'disabled'}>${k.available ? `Claim ${fmt(k.available)} USDT` : 'Nothing to claim'}</button>
-        <label class="lab sec">History</label>
+        <label class="lab grp">History</label>
         <div class="card list">
           <div><span>${I.store}</span><p>Online purchase<small>Today</small></p><b class="up">+4.20</b></div>
           <div><span>${I.swap}</span><p>Swap USDT → ETH<small>Yesterday</small></p><b class="up">+0.60</b></div>
@@ -327,23 +327,23 @@
       const c = P.cfg;
       const row = (t, s, on) => `<button class="setrow" data-sw="1"><span><b>${t}</b><small>${s}</small></span><i class="sw${on ? ' on' : ''}"></i></button>`;
       V('settings').innerHTML = `${hdr('Settings')}
-        <label class="lab sec">Security</label>
+        <label class="lab grp">Security</label>
         <div class="card list0">
           ${row('Face ID', 'Approve every transaction', true)}
           ${row('Passkeys', 'Phishing-resistant sign-in', true)}
           ${row('Transaction PIN', '6-digit fallback', true)}
           ${row('Risk alerts', 'Warn on suspicious addresses', true)}
         </div>
-        <label class="lab sec">Compliance</label>
+        <label class="lab grp">Compliance</label>
         <div class="card list0" data-hl="compliance">
           <div class="setrow"><span><b>Identity</b><small>${c.kyc ? 'reID verified · Level 2' : 'Not required'}</small></span><em class="tag ${c.kyc ? 'g' : ''}">${c.kyc ? 'Verified' : 'Off'}</em></div>
           <div class="setrow"><span><b>Travel Rule</b><small>${c.travel ? 'Enabled above $1,000' : 'Disabled'}</small></span><em class="tag ${c.travel ? 'g' : ''}">${c.travel ? 'On' : 'Off'}</em></div>
           <div class="setrow"><span><b>Sanctions screening</b><small>${c.screen ? 'All outgoing addresses' : 'Disabled'}</small></span><em class="tag ${c.screen ? 'g' : ''}">${c.screen ? 'On' : 'Off'}</em></div>
           <div class="setrow"><span><b>Region</b><small>Jurisdiction profile</small></span><em class="tag">${esc(c.region)}</em></div>
         </div>
-        <label class="lab sec">Networks</label>
+        <label class="lab grp">Networks</label>
         <div class="card list0 netl" data-hl="nets">${c.nets.map(n => `<div class="setrow">${netImg(n)}<span><b>${n}</b></span><em class="tag g">Live</em></div>`).join('')}</div>
-        <label class="lab sec">Add custom network</label>
+        <label class="lab grp">Add custom network</label>
         <div class="card form0">
           <input class="n-name" placeholder="Network name" aria-label="Network name">
           <input class="n-rpc" placeholder="RPC URL (https://…)" aria-label="RPC URL">

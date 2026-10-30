@@ -241,7 +241,7 @@ h4{font-size:16px;font-weight:600;margin-bottom:10px}
 .slipchip{display:flex;align-items:center;gap:5px;height:34px;padding:0 12px;border-radius:999px;background:var(--ph-card);font-size:12px;font-weight:600;color:var(--ph-ink)}
 .card{display:block;background:var(--ph-card);border-radius:20px;padding:14px;margin-bottom:10px;border:1px solid var(--ph-line)}
 .lab{display:block;font-size:11px;font-weight:600;color:var(--ph-mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.lab.sec{margin:14px 4px 6px}
+.lab.grp{margin:14px 4px 6px}
 .amtrow{display:flex;align-items:center;gap:8px}
 .big{flex:1;min-width:0;border:0;outline:0;background:none;font-size:30px;font-weight:700;letter-spacing:-.03em;color:var(--ph-ink);font-variant-numeric:tabular-nums}
 .pay .big[readonly]{color:var(--ph-mut)}
@@ -1194,3 +1194,5 @@ input[type=range]{width:100%;accent-color:var(--v);height:28px;cursor:pointer}
 /* header: fewer links */
 .links{gap:28px;font-size:14px}
 @media (max-width:1280px) and (min-width:901px){.links a[href="#networks"],.links a[href="#faq"],.links a[href="#security"]{display:revert}}
+.tabbar button:focus-visible,.acts button:focus-visible{outline:2px solid var(--act);outline-offset:-2px;border-radius:12px}
+.tabbar button:focus:not(:focus-visible){outline:none}
