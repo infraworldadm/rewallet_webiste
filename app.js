@@ -359,6 +359,21 @@
     addEventListener('pointermove', e => { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; }, { passive: true });
   }
 
+  /* ---------- theme ---------- */
+  const root = document.documentElement, tBtn = $('#themeT'), meta = $('meta[name=theme-color]');
+  const applyTheme = t => {
+    root.dataset.theme = t;
+    meta.content = t === 'dark' ? '#0b0716' : '#fbfaff';
+    tBtn.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+  };
+  applyTheme(root.dataset.theme || 'light');
+  tBtn.onclick = () => {
+    root.classList.add('theming');
+    const t = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(t); try { localStorage.setItem('rw-theme', t); } catch {}
+    setTimeout(() => root.classList.remove('theming'), 400);
+  };
+
   /* ---------- nav ---------- */
   const nav = $('#nav'), burger = $('#burger'), links = $('#links');
   addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20), { passive: true });
@@ -401,7 +416,7 @@
   /* ---------- hero particles ---------- */
   const cv = $('#particles');
   if (cv && !reduce) {
-    const ctx = cv.getContext('2d'); let W, H, pts = [];
+    const ctx = cv.getContext('2d'); let W, H, pts = []; const dark = () => document.documentElement.dataset.theme === 'dark';
     const size = () => { const dpr = Math.min(devicePixelRatio || 1, 2); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       pts = Array.from({ length: Math.round(W * H / 22000) }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25 })); };
     size(); addEventListener('resize', size);
@@ -409,10 +424,10 @@
     const draw = () => {
       if (vis) {
         ctx.clearRect(0, 0, W, H);
-        for (const p of pts) { p.x = (p.x + p.vx + W) % W; p.y = (p.y + p.vy + H) % H; ctx.fillStyle = 'rgba(201,176,255,.6)'; ctx.fillRect(p.x, p.y, 1.6, 1.6); }
+        for (const p of pts) { p.x = (p.x + p.vx + W) % W; p.y = (p.y + p.vy + H) % H; ctx.fillStyle = dark() ? 'rgba(201,176,255,.6)' : 'rgba(112,0,255,.35)'; ctx.fillRect(p.x, p.y, 1.6, 1.6); }
         for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
           const a = pts[i], b = pts[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-          if (d < 120) { ctx.strokeStyle = `rgba(155,92,255,${(1 - d / 120) * .22})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+          if (d < 120) { ctx.strokeStyle = `rgba(${dark() ? '155,92,255' : '112,0,255'},${(1 - d / 120) * (dark() ? .22 : .14)})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
         }
       }
       requestAnimationFrame(draw);
@@ -424,7 +439,7 @@
   // Set CONTACT_ENDPOINT to a form backend (e.g. Formspree/your API) to POST JSON.
   // If left empty, the form opens the user's email client addressed to CONTACT_EMAIL.
   const CONTACT_ENDPOINT = '';
-  const CONTACT_EMAIL = 'info@resystem.org';
+  const CONTACT_EMAIL = 'info@rewallet.online';
   const form = $('#contactForm'), msg = $('#formMsg');
   form.addEventListener('submit', async e => {
     e.preventDefault();

@@ -17,7 +17,7 @@ python3 -m http.server 8080   # then open http://localhost:8080
 
 ## Contact form
 In `app.js` set `CONTACT_ENDPOINT` to a form backend (Formspree, your API, etc.) to POST JSON.
-If empty, the form opens the visitor's email client addressed to `CONTACT_EMAIL`.
+If empty, the form opens the visitor's email client addressed to `CONTACT_EMAIL` (info@rewallet.online).
 
 ## Deploy
 Any static host (Vercel, Netlify, GitHub Pages, Nginx). Serve the repo root.
