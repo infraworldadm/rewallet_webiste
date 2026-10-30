@@ -703,7 +703,7 @@
       }).join('');
       $$('[data-edit]', form).forEach(b => b.onclick = () => go(+b.dataset.edit));
     };
-    const go = i => {
+    const go = (i, init) => {
       cur = Math.max(0, Math.min(steps.length - 1, i));
       steps.forEach((s, k) => s.classList.toggle('on', k === cur));
       nav.forEach((l, k) => { l.classList.toggle('on', k === cur); });
@@ -712,7 +712,7 @@
       back.disabled = cur === 0; next.hidden = cur === steps.length - 1; submit.hidden = cur !== steps.length - 1;
       if (cur === steps.length - 1) summary();
       msg.textContent = '';
-      const top = form.getBoundingClientRect().top + scrollY - 90; if (Math.abs(scrollY - top) > 200) scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' });
+      if (!init) { const top = form.getBoundingClientRect().top + scrollY - 90; if (Math.abs(scrollY - top) > 200) scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' }); }
     };
     next.onclick = () => { if (!validate(cur)) return; nav[cur].classList.add('done'); go(cur + 1); };
     back.onclick = () => go(cur - 1);
@@ -757,7 +757,7 @@
       }
       submit.disabled = false; back.disabled = false; submit.innerHTML = 'Send request <span class="arr">→</span>';
     });
-    go(0);
+    go(0, true);
   })();
 
   /* ---------- security showcase ---------- */
