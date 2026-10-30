@@ -1207,3 +1207,14 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 @media (max-width:640px){.vp-btn{width:44px;height:44px}.vp-seg button{height:8px}}
 html.fs-lock .nav,html.fs-lock .toast{display:none}
 html.fs-lock .sec:has(.fs-fake),html.fs-lock section:has(.fs-fake){z-index:3000}
+/* YouTube-style mini player */
+.vp.mini{position:fixed;right:16px;bottom:16px;z-index:1500;margin:0;border-radius:14px;box-shadow:0 24px 60px -12px rgba(0,0,0,.7);animation:vpPop .35s cubic-bezier(.2,1.2,.4,1)}
+@keyframes vpPop{from{opacity:0;transform:translateY(30px) scale(.9)}}
+html.vp-mini-on .sec:has(.vp.mini),html.vp-mini-on section:has(.vp.mini){z-index:1500}
+.vp.mini .vp-ch,.vp.mini .vp-time,.vp.mini #vpFs,.vp.mini .vp-snd-chip{display:none!important}
+.vp.mini .vp-ctrl{padding:6px 8px;gap:6px}.vp.mini .vp-btn{width:32px;height:32px}
+.vp-mini-bar{display:none}
+.vp.mini .vp-mini-bar{display:flex;gap:6px;position:absolute;top:8px;right:8px;z-index:6}
+.vp-mini-x{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(6px);cursor:pointer}
+.vp-mini-x svg{width:15px;height:15px}
+@media (max-width:640px){.vp.mini{right:10px;bottom:calc(10px + env(safe-area-inset-bottom))}.vp.mini .vp-seg{display:none}}

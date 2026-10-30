@@ -904,6 +904,7 @@
     const setFake = on => { vp.classList.toggle('fs-fake', on); document.documentElement.classList.toggle('fs-lock', on); fsBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen'); };
     fsBtn.addEventListener('click', () => {
       if (vp.classList.contains('fs-fake')) return setFake(false);
+      if (isMini) setMini(false);
       if (fsEl()) return (document.exitFullscreen || document.webkitExitFullscreen).call(document);
       const req = vp.requestFullscreen || vp.webkitRequestFullscreen;
       if (req) { try { const r = req.call(vp); if (r && r.catch) r.catch(() => setFake(true)); return; } catch {} }
@@ -913,10 +914,37 @@
     show(0); render(); ui();
     // silent preview when scrolled into view (browsers only allow sound after a tap)
     let auto = false;
-    new IntersectionObserver(([e]) => {
+    // YouTube-style mini player: if the visitor started it (sound on) and scrolls away, it pops out bottom-right
+    const ph = document.createElement('div'); ph.className = 'vp-ph'; vp.before(ph);
+    const scr = $('.vp-screen', vp);
+    const mini = document.createElement('div'); mini.className = 'vp-mini-bar';
+    mini.innerHTML = '<button class="vp-mini-x" aria-label="Back to video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button><button class="vp-mini-x" aria-label="Close mini player"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>';
+    vp.appendChild(mini);
+    let isMini = false, dismissed = false;
+    const fitMini = () => {
+      if (!isMini) return;
+      const W = Math.min(innerWidth < 640 ? innerWidth * .56 : 360, innerWidth - 32), w0 = +vp.dataset.w, h0 = +vp.dataset.h, k = W / w0;
+      vp.style.width = W + 'px';
+      Object.assign(scr.style, { width: w0 + 'px', height: h0 + 'px', transform: `scale(${k})`, transformOrigin: '0 0', marginRight: (W - w0) + 'px', marginBottom: (h0 * k - h0) + 'px' });
+    };
+    const setMini = on => {
+      if (on === isMini) return;
+      if (on) { const r = scr.getBoundingClientRect(); vp.dataset.w = r.width; vp.dataset.h = r.height; ph.style.height = vp.offsetHeight + 'px'; }
+      isMini = on; vp.classList.toggle('mini', on); document.documentElement.classList.toggle('vp-mini-on', on);
+      if (on) fitMini(); else { vp.style.width = ''; ['width', 'height', 'transform', 'transformOrigin', 'marginRight', 'marginBottom'].forEach(k => scr.style[k] = ''); ph.style.height = ''; }
+    };
+    addEventListener('resize', fitMini);
+    $$('button', mini)[0].addEventListener('click', e => { e.stopPropagation(); ph.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+    $$('button', mini)[1].addEventListener('click', e => { e.stopPropagation(); dismissed = true; pause(); setMini(false); });
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (e.target !== (isMini ? ph : vp)) return; // the "slot" is the placeholder while popped out
+      if (e.isIntersecting) { dismissed = false; setMini(false); }
       if (e.isIntersecting && !auto && !reduce) { auto = true; audio.preload = 'auto'; play(false); }
-      if (!e.isIntersecting && isPlaying() && !vp.classList.contains('fs-fake') && !fsEl()) pause();
-    }, { threshold: .5 }).observe(vp);
+      if (!e.isIntersecting && isPlaying() && !vp.classList.contains('fs-fake') && !fsEl()) {
+        if (soundOn() && !dismissed) { setMini(true); io.unobserve(ph); io.observe(ph); } else pause();
+      }
+    }), { threshold: .35 });
+    io.observe(vp); io.observe(ph);
     document.addEventListener('visibilitychange', () => { if (document.hidden && isPlaying()) pause(); });
   })();
 
