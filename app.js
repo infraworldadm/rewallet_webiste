@@ -763,12 +763,12 @@
       'The second is your team. There is no wallet engineering team to hire, train or retain. Your developers stay focused on your core product.',
       'Third, future updates. New chains, new features and security patches are developed and pushed by us, so your wallet keeps improving without extra work on your side.',
       'Need something specific? Request a new network, or bring your own dApps into the in-wallet browser, and our team will add them for you.',
-      'Behind the scenes, we run the complete architecture and tech stack. The apps, the wallet engine, security, nodes, R P C and monitoring. Enterprise grade, and fully managed.',
+      'Behind the scenes, we run the complete architecture and tech stack — from the apps to the wallet engine, hosting and releases. Enterprise grade, and fully managed.',
       'Everything is ready to deploy, at a single time. reWallet. One wallet, every network, complete control. Let us launch yours.',
     ];
     const CAP = VO.map(s => s.replace('R P C', 'RPC').replace('Let us', "Let's").replace(/\bIt is\b/g, "It's").replace(/\bthat is\b/g, "that's").replace(/\bThere is\b/g, "There's"));
     const chNames = ['The problem', 'The solution', 'Time saving', 'Developer saving', 'Future updates', 'Special requests', 'Fully managed', 'Deploy'];
-    const DUR = VO.map(s => Math.max(6500, s.split(/\s+/).length / 2.45 * 1000 + 900)); // ~147 wpm
+    const DUR = VO.map(s => Math.max(6000, s.split(/\s+/).length / 2.55 * 1000 + 600)); // ~153 wpm estimate; narration end drives the cut
     const TOTAL = DUR.reduce((a, b) => a + b, 0);
     const seg = $('#vpSeg'), ch = $('#vpCh'), cap = $('#vpCap'), time = $('#vpTime'), sndBtn = $('#vpSnd'), chip = $('#vpChip');
     seg.innerHTML = scenes.map((_, i) => `<button aria-label="Chapter ${i + 1}: ${chNames[i]}" style="flex:${DUR[i]}"><i></i></button>`).join('');
@@ -778,66 +778,90 @@
     const mm = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
     const before = i => DUR.slice(0, i).reduce((a, b) => a + b, 0);
 
-    /* ---- voice (Web Speech API, best available natural voice) ---- */
-    const synth = window.speechSynthesis; let voice = null;
+    /* ---- voice (Web Speech API) — sentence queue + Chrome keep-alive, never blocks the slides ---- */
+    const synth = window.speechSynthesis; let voice = null, keep, vToken = 0;
     const pickVoice = () => {
       const vs = synth ? synth.getVoices().filter(v => /^en(-|_)/i.test(v.lang)) : [];
-      const pref = [/Natural/i, /Neural/i, /Premium|Enhanced/i, /Google US English/i, /Google UK English Female/i, /Samantha|Ava|Allison|Serena|Daniel|Karen/i, /Microsoft (Aria|Jenny|Guy|Libby|Sonia)/i];
+      const pref = [/Online \(Natural\)/i, /Natural/i, /Neural/i, /(Premium|Enhanced)/i, /Google US English/i, /Google UK English (Female|Male)/i, /^(Ava|Samantha|Allison|Serena|Daniel|Karen|Moira|Tessa)/i, /Microsoft (Aria|Jenny|Guy|Zira|David)/i];
       for (const r of pref) { const v = vs.find(x => r.test(x.name)); if (v) return v; }
       return vs.find(v => /en-US/i.test(v.lang)) || vs[0] || null;
     };
     if (synth) { voice = pickVoice(); synth.onvoiceschanged = () => { voice = pickVoice(); }; }
+    const stopVoice = () => { vToken++; clearInterval(keep); try { synth?.cancel(); } catch {} music.duck(false); };
     const speak = i => {
-      if (!synth || !sound) return; synth.cancel(); spokeDone = false;
-      const parts = VO[i].match(/[^.!?]+[.!?]+/g) || [VO[i]];
-      parts.forEach((s, k) => {
-        const u = new SpeechSynthesisUtterance(s.trim()); if (voice) u.voice = voice; u.lang = voice?.lang || 'en-US';
-        u.rate = .98; u.pitch = 1; u.volume = 1;
+      if (!synth || !sound) { spokeDone = true; return; }
+      stopVoice(); spokeDone = false; const my = ++vToken;
+      const parts = (VO[i].match(/[^.!?—]+[.!?—]*/g) || [VO[i]]).map(s => s.replace(/—/g, ',').trim()).filter(Boolean);
+      let k = 0;
+      const next = () => {
+        if (my !== vToken) return;
+        if (k >= parts.length) { spokeDone = true; music.duck(false); clearInterval(keep); return; }
+        const u = new SpeechSynthesisUtterance(parts[k++]);
+        if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+        u.rate = voice && /Natural|Neural|Online/i.test(voice.name) ? 1 : .96; u.pitch = 1; u.volume = 1;
         u.onstart = () => music.duck(true);
-        if (k === parts.length - 1) u.onend = () => { spokeDone = true; music.duck(false); };
+        u.onend = () => setTimeout(next, 120);
+        u.onerror = () => setTimeout(next, 50);
         synth.speak(u);
-      });
+      };
+      setTimeout(next, 80);
+      clearInterval(keep); keep = setInterval(() => { if (synth.speaking && !synth.paused) { synth.pause(); synth.resume(); } }, 9000);
     };
 
-    /* ---- ambient music (Web Audio, generated — no files) ---- */
+    /* ---- ambient score (Web Audio, generated): warm pad + sub bass + soft keys + light shaker, with reverb ---- */
     const music = (() => {
-      let ac, master, on = false, timer;
-      const chords = [[261.63, 329.63, 392, 493.88], [220, 261.63, 329.63, 392], [174.61, 220, 261.63, 329.63], [196, 246.94, 293.66, 392]];
-      let ci = 0;
-      const pad = (f, t0, d) => {
-        const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter();
-        o.type = 'sine'; o2.type = 'triangle'; o.frequency.value = f / 2; o2.frequency.value = f * 1.003;
-        lp.type = 'lowpass'; lp.frequency.value = 900;
-        g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.06, t0 + 1.6); g.gain.linearRampToValueAtTime(.045, t0 + d - 1.2); g.gain.linearRampToValueAtTime(0, t0 + d + .4);
-        o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(master); o.start(t0); o2.start(t0); o.stop(t0 + d + .5); o2.stop(t0 + d + .5);
+      let ac, out, bus, rev, on = false, timer, nextT = 0, step = 0;
+      const BPM = 82, beat = 60 / BPM;
+      const N = n => 440 * Math.pow(2, (n - 69) / 12);
+      const prog = [[48, [60, 64, 67, 71, 74]], [45, [57, 60, 64, 67, 71]], [41, [57, 60, 64, 65, 69]], [43, [55, 59, 62, 67, 69]]]; // Cmaj9 Am9 Fmaj9 G6/9
+      const impulse = () => { const len = ac.sampleRate * 3.2, b = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); } return b; };
+      const init = () => {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        out = ac.createGain(); out.gain.value = 0;
+        const comp = ac.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
+        bus = ac.createGain(); rev = ac.createConvolver(); rev.buffer = impulse();
+        const wet = ac.createGain(); wet.gain.value = .55;
+        bus.connect(comp); bus.connect(rev); rev.connect(wet); wet.connect(comp); comp.connect(out); out.connect(ac.destination);
       };
-      const pluck = (f, t0) => {
-        const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = f * 2;
-        g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.035, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + 1.6);
-        o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + 1.7);
+      const pad = (notes, t, d) => notes.forEach(n => {
+        const g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(500, t); f.frequency.linearRampToValueAtTime(1400, t + d * .5); f.frequency.linearRampToValueAtTime(700, t + d); f.Q.value = .4;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.022, t + 1.4); g.gain.setValueAtTime(.022, t + d - .8); g.gain.linearRampToValueAtTime(0, t + d + .6);
+        [-7, 0, 7].forEach(dt => { const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = N(n); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + d + .7); });
+        f.connect(g); g.connect(bus);
+      });
+      const bass = (n, t, d) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = N(n - 12 + 12); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + .08); g.gain.exponentialRampToValueAtTime(.04, t + d * .8); g.gain.linearRampToValueAtTime(0, t + d); o.connect(g); g.connect(out._dry || bus); o.start(t); o.stop(t + d + .05); };
+      const key = (n, t, v) => {
+        const g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2600;
+        [[1, 'triangle', 1], [2, 'sine', .35], [3, 'sine', .12]].forEach(([m, ty, a]) => { const o = ac.createOscillator(), og = ac.createGain(); o.type = ty; o.frequency.value = N(n) * m; og.gain.value = a; o.connect(og); og.connect(f); o.start(t); o.stop(t + 2.4); });
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05 * v, t + .008); g.gain.exponentialRampToValueAtTime(.0008, t + 2.2);
+        f.connect(g); g.connect(bus);
       };
-      const bar = () => {
-        const t0 = ac.currentTime + .05, d = 4, c = chords[ci++ % chords.length];
-        c.forEach(f => pad(f, t0, d));
-        [0, 1, 2, 3, 2, 1].forEach((k, n) => pluck(c[k], t0 + n * .66));
+      const shaker = t => { const len = ac.sampleRate * .06, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len); const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = b; f.type = 'highpass'; f.frequency.value = 7000; g.gain.value = .018; s.connect(f); f.connect(g); g.connect(bus); s.start(t); };
+      const ARP = [0, 2, 4, 2, 3, 1, 4, 2];
+      const schedule = () => {
+        while (nextT < ac.currentTime + .4) {
+          const bar = Math.floor(step / 8), s8 = step % 8, [root, ch] = prog[bar % 4], t = nextT;
+          if (s8 === 0) { pad(ch.slice(0, 4), t, beat * 4); bass(root, t, beat * 3.6); }
+          if (bar % 2 === 1 || bar > 3) key(ch[ARP[s8]] + 12, t, s8 % 2 ? .6 : 1);
+          if (bar > 1 && s8 % 2 === 1) shaker(t);
+          nextT += beat / 2; step++;
+        }
       };
       return {
         start() {
-          if (on) return; on = true;
-          ac = ac || new (window.AudioContext || window.webkitAudioContext)();
-          if (!master) { master = ac.createGain(); const comp = ac.createDynamicsCompressor(); const dl = ac.createDelay(); const fb = ac.createGain(); dl.delayTime.value = .33; fb.gain.value = .3; master.connect(comp); master.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(comp); comp.connect(ac.destination); }
-          ac.resume(); master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(0, ac.currentTime); master.gain.linearRampToValueAtTime(.8, ac.currentTime + 1.5);
-          bar(); timer = setInterval(bar, 4000);
+          if (on) return; on = true; if (!ac) init(); ac.resume();
+          nextT = ac.currentTime + .1; out.gain.cancelScheduledValues(ac.currentTime); out.gain.setValueAtTime(out.gain.value, ac.currentTime); out.gain.linearRampToValueAtTime(.9, ac.currentTime + 2);
+          schedule(); timer = setInterval(schedule, 120);
         },
-        stop() { if (!on) return; on = false; clearInterval(timer); master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(master.gain.value, ac.currentTime); master.gain.linearRampToValueAtTime(0, ac.currentTime + .6); },
-        duck(d) { if (!on || !master) return; master.gain.cancelScheduledValues(ac.currentTime); master.gain.setTargetAtTime(d ? .45 : .8, ac.currentTime, .3); },
+        stop() { if (!on) return; on = false; clearInterval(timer); out.gain.cancelScheduledValues(ac.currentTime); out.gain.setValueAtTime(out.gain.value, ac.currentTime); out.gain.linearRampToValueAtTime(0, ac.currentTime + .8); },
+        duck(d) { if (!on || !out) return; out.gain.cancelScheduledValues(ac.currentTime); out.gain.setTargetAtTime(d ? .38 : .9, ac.currentTime, .35); },
       };
     })();
 
     const setSound = v => {
       sound = v; sndBtn.setAttribute('aria-pressed', v); sndBtn.setAttribute('aria-label', v ? 'Mute' : 'Turn sound on');
       vp.classList.toggle('sound', v); chip.hidden = v || !vp.classList.contains('started');
-      if (v && playing) { music.start(); speak(idx); } else { music.stop(); synth?.cancel(); }
+      if (v && playing) { music.start(); speak(idx); } else { music.stop(); stopVoice(); spokeDone = true; }
     };
 
     const counters = sc => $$('[data-to]', sc).forEach(el => {
@@ -858,9 +882,12 @@
       t += n - last; last = n;
       const D = DUR[idx];
       bars[idx].style.width = Math.min(t / D * 100, 100) + '%';
+      if (t >= D && sound && !spokeDone) bars[idx].style.width = '100%';
       time.textContent = `${mm((before(idx) + Math.min(t, D)) / 1000)} / ${mm(TOTAL / 1000)}`;
-      const speaking = sound && synth && synth.speaking && !spokeDone;
-      if (t >= D && !speaking) { if (idx === N - 1) { pause(true); bars[idx].style.width = '100%'; return; } show(idx + 1); }
+      // advance when narration has finished (or sound is off) and the minimum scene time has passed;
+      // hard cap guards against a stalled speech engine so slides never freeze
+      const done = !sound || spokeDone;
+      if ((t >= D && done) || t >= D * 1.6) { if (idx === N - 1) { pause(true); bars[idx].style.width = '100%'; return; } show(idx + 1); }
       raf = requestAnimationFrame(tick);
     };
     const play = () => {
@@ -868,12 +895,12 @@
       vp.classList.add('started');
       if (idx === N - 1 && t >= DUR[N - 1]) { t = 0; idx = 0; }
       playing = true; vp.classList.add('playing'); $('#vpPlay').setAttribute('aria-label', 'Pause');
-      if (fresh) show(idx); else if (sound) { if (synth?.paused) synth.resume(); else speak(idx); }
+      if (fresh) show(idx); else if (sound) speak(idx);
       if (sound) music.start();
       chip.hidden = sound;
       last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
     };
-    const pause = ended => { playing = false; vp.classList.remove('playing'); $('#vpPlay').setAttribute('aria-label', 'Play'); cancelAnimationFrame(raf); synth?.cancel(); music.stop(); if (ended) chip.hidden = true; };
+    const pause = ended => { playing = false; vp.classList.remove('playing'); $('#vpPlay').setAttribute('aria-label', 'Play'); cancelAnimationFrame(raf); stopVoice(); music.stop(); if (ended) chip.hidden = true; };
     // Big play = user gesture → start with sound
     $('#vpBig').onclick = () => { setSound(true); play(); };
     chip.onclick = e => { e.stopPropagation(); setSound(true); if (!playing) play(); };
@@ -892,7 +919,8 @@
       if (e.isIntersecting && !auto && !reduce) { auto = true; play(); }
       if (!e.isIntersecting && playing) pause();
     }, { threshold: .6 }).observe(vp);
-    addEventListener('pagehide', () => synth?.cancel());
+    addEventListener('pagehide', () => stopVoice());
+    document.addEventListener('visibilitychange', () => { if (document.hidden && playing) pause(); });
   })();
 
   /* ---------- hero globe (multi-chain arcs) ---------- */
