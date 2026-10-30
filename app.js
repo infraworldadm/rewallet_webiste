@@ -806,175 +806,79 @@
     show(0);
   })();
 
-  /* ---------- explainer "video" player — narrated (voice-over + ambient music) ---------- */
+  /* ---------- explainer "video" player — one narrated soundtrack (studio voice + music) drives the scenes ---------- */
   (() => {
     const vp = $('#vp'); if (!vp) return;
     const scenes = $$('.vs', vp), N = scenes.length;
-    const VO = [
-      'Every business that wants its own crypto wallet hits the same wall. Key management, multi-chain support, swaps, bridges, security audits, and apps for every platform. Built in-house, that is twelve months or more of engineering — and the maintenance never ends.',
-      'reWallet changes that. It is a production-ready, decentralized wallet that you brand as your own, and deploy to iOS, Android, web and browser extension, in one go.',
-      'The first benefit is time. Instead of a year-long build, you go live in days, and start serving your users immediately.',
-      'The second is your team. There is no wallet engineering team to hire, train or retain. Your developers stay focused on your core product.',
-      'Third, future updates. New chains, new features and security patches are developed and pushed by us, so your wallet keeps improving without extra work on your side.',
-      'Need something specific? Request a new network, or bring your own dApps into the in-wallet browser, and our team will add them for you.',
-      'Behind the scenes, we run the complete architecture and tech stack — from the apps to the wallet engine, hosting and releases. Enterprise grade, and fully managed.',
-      'Everything is ready to deploy, at a single time. reWallet. One wallet, every network, complete control. Let us launch yours.',
-    ];
-    const CAP = VO.map(s => s.replace('R P C', 'RPC').replace('Let us', "Let's").replace(/\bIt is\b/g, "It's").replace(/\bthat is\b/g, "that's").replace(/\bThere is\b/g, "There's"));
+    const SRC = 'assets/explainer/narration.mp3';
+    const STARTS = [0, 17.68, 29.71, 37.53, 47.13, 58.72, 67.64, 78.48], TOTAL = 88.46; // chapter cue points (seconds)
     const chNames = ['The problem', 'The solution', 'Time saving', 'Developer saving', 'Future updates', 'Special requests', 'Fully managed', 'Deploy'];
-    const DUR = VO.map(s => Math.max(6000, s.split(/\s+/).length / 2.55 * 1000 + 600)); // ~153 wpm estimate; narration end drives the cut
-    const TOTAL = DUR.reduce((a, b) => a + b, 0);
-    const seg = $('#vpSeg'), ch = $('#vpCh'), cap = $('#vpCap'), time = $('#vpTime'), sndBtn = $('#vpSnd'), chip = $('#vpChip');
+    const DUR = STARTS.map((s, i) => (STARTS[i + 1] ?? TOTAL) - s);
+    const seg = $('#vpSeg'), ch = $('#vpCh'), time = $('#vpTime'), sndBtn = $('#vpSnd'), chip = $('#vpChip'), playBtn = $('#vpPlay');
     seg.innerHTML = scenes.map((_, i) => `<button aria-label="Chapter ${i + 1}: ${chNames[i]}" style="flex:${DUR[i]}"><i></i></button>`).join('');
     ch.innerHTML = chNames.map((n, i) => `<button>${i + 1}. ${n}</button>`).join('');
     const bars = $$('i', seg);
-    let idx = 0, t = 0, playing = false, last = 0, raf, sound = false, spokeDone = false;
+    const audio = new Audio(); audio.preload = 'metadata'; audio.src = SRC; audio.muted = true;
+    let idx = -1, raf, broken = false, clock = 0, last = 0, fakePlaying = false;
     const mm = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-    const before = i => DUR.slice(0, i).reduce((a, b) => a + b, 0);
-
-    /* ---- voice (Web Speech API) — sentence queue + Chrome keep-alive, never blocks the slides ---- */
-    const synth = window.speechSynthesis; let voice = null, keep, vToken = 0;
-    const pickVoice = () => {
-      const vs = synth ? synth.getVoices().filter(v => /^en(-|_)/i.test(v.lang)) : [];
-      const pref = [/Online \(Natural\)/i, /Natural/i, /Neural/i, /(Premium|Enhanced)/i, /Google US English/i, /Google UK English (Female|Male)/i, /^(Ava|Samantha|Allison|Serena|Daniel|Karen|Moira|Tessa)/i, /Microsoft (Aria|Jenny|Guy|Zira|David)/i];
-      for (const r of pref) { const v = vs.find(x => r.test(x.name)); if (v) return v; }
-      return vs.find(v => /en-US/i.test(v.lang)) || vs[0] || null;
-    };
-    if (synth) { voice = pickVoice(); synth.onvoiceschanged = () => { voice = pickVoice(); }; }
-    const stopVoice = () => { vToken++; clearInterval(keep); try { synth?.cancel(); } catch {} music.duck(false); };
-    const speak = i => {
-      if (!synth || !sound) { spokeDone = true; return; }
-      stopVoice(); spokeDone = false; const my = ++vToken;
-      const parts = (VO[i].match(/[^.!?—]+[.!?—]*/g) || [VO[i]]).map(s => s.replace(/—/g, ',').trim()).filter(Boolean);
-      let k = 0;
-      const next = () => {
-        if (my !== vToken) return;
-        if (k >= parts.length) { spokeDone = true; music.duck(false); clearInterval(keep); return; }
-        const u = new SpeechSynthesisUtterance(parts[k++]);
-        if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
-        u.rate = voice && /Natural|Neural|Online/i.test(voice.name) ? 1 : .96; u.pitch = 1; u.volume = 1;
-        u.onstart = () => music.duck(true);
-        u.onend = () => setTimeout(next, 120);
-        u.onerror = () => setTimeout(next, 50);
-        synth.speak(u);
-      };
-      setTimeout(next, 80);
-      clearInterval(keep); keep = setInterval(() => { if (synth.speaking && !synth.paused) { synth.pause(); synth.resume(); } }, 9000);
-    };
-
-    /* ---- ambient score (Web Audio, generated): warm pad + sub bass + soft keys + light shaker, with reverb ---- */
-    const music = (() => {
-      let ac, out, bus, rev, on = false, timer, nextT = 0, step = 0;
-      const BPM = 82, beat = 60 / BPM;
-      const N = n => 440 * Math.pow(2, (n - 69) / 12);
-      const prog = [[48, [60, 64, 67, 71, 74]], [45, [57, 60, 64, 67, 71]], [41, [57, 60, 64, 65, 69]], [43, [55, 59, 62, 67, 69]]]; // Cmaj9 Am9 Fmaj9 G6/9
-      const impulse = () => { const len = ac.sampleRate * 3.2, b = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); } return b; };
-      const init = () => {
-        ac = new (window.AudioContext || window.webkitAudioContext)();
-        out = ac.createGain(); out.gain.value = 0;
-        const comp = ac.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
-        bus = ac.createGain(); rev = ac.createConvolver(); rev.buffer = impulse();
-        const wet = ac.createGain(); wet.gain.value = .55;
-        bus.connect(comp); bus.connect(rev); rev.connect(wet); wet.connect(comp); comp.connect(out); out.connect(ac.destination);
-      };
-      const pad = (notes, t, d) => notes.forEach(n => {
-        const g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(500, t); f.frequency.linearRampToValueAtTime(1400, t + d * .5); f.frequency.linearRampToValueAtTime(700, t + d); f.Q.value = .4;
-        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.022, t + 1.4); g.gain.setValueAtTime(.022, t + d - .8); g.gain.linearRampToValueAtTime(0, t + d + .6);
-        [-7, 0, 7].forEach(dt => { const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = N(n); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + d + .7); });
-        f.connect(g); g.connect(bus);
-      });
-      const bass = (n, t, d) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = N(n - 12 + 12); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + .08); g.gain.exponentialRampToValueAtTime(.04, t + d * .8); g.gain.linearRampToValueAtTime(0, t + d); o.connect(g); g.connect(out._dry || bus); o.start(t); o.stop(t + d + .05); };
-      const key = (n, t, v) => {
-        const g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2600;
-        [[1, 'triangle', 1], [2, 'sine', .35], [3, 'sine', .12]].forEach(([m, ty, a]) => { const o = ac.createOscillator(), og = ac.createGain(); o.type = ty; o.frequency.value = N(n) * m; og.gain.value = a; o.connect(og); og.connect(f); o.start(t); o.stop(t + 2.4); });
-        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05 * v, t + .008); g.gain.exponentialRampToValueAtTime(.0008, t + 2.2);
-        f.connect(g); g.connect(bus);
-      };
-      const shaker = t => { const len = ac.sampleRate * .06, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len); const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = b; f.type = 'highpass'; f.frequency.value = 7000; g.gain.value = .018; s.connect(f); f.connect(g); g.connect(bus); s.start(t); };
-      const ARP = [0, 2, 4, 2, 3, 1, 4, 2];
-      const schedule = () => {
-        while (nextT < ac.currentTime + .4) {
-          const bar = Math.floor(step / 8), s8 = step % 8, [root, ch] = prog[bar % 4], t = nextT;
-          if (s8 === 0) { pad(ch.slice(0, 4), t, beat * 4); bass(root, t, beat * 3.6); }
-          if (bar % 2 === 1 || bar > 3) key(ch[ARP[s8]] + 12, t, s8 % 2 ? .6 : 1);
-          if (bar > 1 && s8 % 2 === 1) shaker(t);
-          nextT += beat / 2; step++;
-        }
-      };
-      return {
-        start() {
-          if (on) return; on = true; if (!ac) init(); ac.resume();
-          nextT = ac.currentTime + .1; out.gain.cancelScheduledValues(ac.currentTime); out.gain.setValueAtTime(out.gain.value, ac.currentTime); out.gain.linearRampToValueAtTime(.9, ac.currentTime + 2);
-          schedule(); timer = setInterval(schedule, 120);
-        },
-        stop() { if (!on) return; on = false; clearInterval(timer); out.gain.cancelScheduledValues(ac.currentTime); out.gain.setValueAtTime(out.gain.value, ac.currentTime); out.gain.linearRampToValueAtTime(0, ac.currentTime + .8); },
-        duck(d) { if (!on || !out) return; out.gain.cancelScheduledValues(ac.currentTime); out.gain.setTargetAtTime(d ? .38 : .9, ac.currentTime, .35); },
-      };
-    })();
-
-    const setSound = v => {
-      sound = v; sndBtn.setAttribute('aria-pressed', v); sndBtn.setAttribute('aria-label', v ? 'Mute' : 'Turn sound on');
-      vp.classList.toggle('sound', v); chip.hidden = v || !vp.classList.contains('started');
-      if (v && playing) { music.start(); speak(idx); } else { music.stop(); stopVoice(); spokeDone = true; }
-    };
-
+    const now = () => broken ? clock : audio.currentTime;
+    const isPlaying = () => broken ? fakePlaying : !audio.paused && !audio.ended;
     const counters = sc => $$('[data-to]', sc).forEach(el => {
       const to = +el.dataset.to, suf = el.dataset.suf || '', dur = to === 100 ? 3400 : 2200, t0 = performance.now();
       const st = n => { const p = Math.min((n - t0) / dur, 1); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suf; if (p < 1 && scenes[idx] === sc) requestAnimationFrame(st); };
       requestAnimationFrame(st);
     });
     const show = i => {
-      idx = (i + N) % N; t = 0; spokeDone = false;
+      if (i === idx) return; idx = i;
       scenes.forEach((s, k) => { s.classList.remove('on'); if (k === idx) { void s.offsetWidth; s.classList.add('on'); } });
       $$('button', ch).forEach((b, k) => b.classList.toggle('on', k === idx));
-      bars.forEach((b, k) => b.style.width = k < idx ? '100%' : '0');
-      cap.textContent = CAP[idx];
-      if (vp.classList.contains('started')) { counters(scenes[idx]); if (playing) speak(idx); }
+      if (vp.classList.contains('started')) counters(scenes[idx]);
     };
-    const tick = n => {
-      if (!playing) return;
-      t += Math.max(0, n - last); last = n;
-      const D = DUR[idx];
-      bars[idx].style.width = Math.min(t / D * 100, 100) + '%';
-      if (t >= D && sound && !spokeDone) bars[idx].style.width = '100%';
-      time.textContent = `${mm((before(idx) + Math.min(t, D)) / 1000)} / ${mm(TOTAL / 1000)}`;
-      // advance when narration has finished (or sound is off) and the minimum scene time has passed;
-      // hard cap guards against a stalled speech engine so slides never freeze
-      const done = !sound || spokeDone;
-      if ((t >= D && done) || t >= D * 1.6) { if (idx === N - 1) { pause(true); bars[idx].style.width = '100%'; return; } show(idx + 1); }
-      raf = requestAnimationFrame(tick);
+    const chapterAt = t => { let k = 0; for (let i = 0; i < N; i++) if (t >= STARTS[i]) k = i; return k; };
+    const render = () => {
+      const t = Math.min(now(), TOTAL), k = chapterAt(t);
+      show(k);
+      bars.forEach((b, i) => b.style.width = i < k ? '100%' : i > k ? '0' : Math.min((t - STARTS[i]) / DUR[i] * 100, 100) + '%');
+      time.textContent = `${mm(t)} / ${mm(TOTAL)}`;
     };
-    const play = () => {
-      const fresh = !vp.classList.contains('started');
-      vp.classList.add('started');
-      if (idx === N - 1 && t >= DUR[N - 1]) { t = 0; idx = 0; }
-      playing = true; vp.classList.add('playing'); $('#vpPlay').setAttribute('aria-label', 'Pause');
-      if (fresh) show(idx); else if (sound) speak(idx);
-      if (sound) music.start();
-      chip.hidden = sound;
-      last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+    const loop = n => {
+      if (broken && fakePlaying) { clock += Math.max(0, n - last) / 1000; last = n; if (clock >= TOTAL) { clock = TOTAL; pause(); } }
+      render(); if (isPlaying()) raf = requestAnimationFrame(loop);
     };
-    const pause = ended => { playing = false; vp.classList.remove('playing'); $('#vpPlay').setAttribute('aria-label', 'Play'); cancelAnimationFrame(raf); stopVoice(); music.stop(); if (ended) chip.hidden = true; };
-    // Big play = user gesture → start with sound
-    $('#vpBig').onclick = () => { setSound(true); play(); };
-    chip.onclick = e => { e.stopPropagation(); setSound(true); if (!playing) play(); };
-    sndBtn.onclick = () => setSound(!sound);
-    $('#vpPlay').onclick = () => playing ? pause() : play();
-    $('.vp-screen', vp).addEventListener('click', e => { if (!e.target.closest('a,.vp-big,.vp-snd-chip') && vp.classList.contains('started')) playing ? pause() : play(); });
-    const jump = k => { vp.classList.add('started'); playing = true; vp.classList.add('playing'); show(k); if (sound) music.start(); last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); };
-    $$('button', seg).forEach((b, k) => b.onclick = () => jump(k));
-    $$('button', ch).forEach((b, k) => b.onclick = () => jump(k));
+    const ui = () => {
+      const p = isPlaying(); vp.classList.toggle('playing', p); playBtn.setAttribute('aria-label', p ? 'Pause' : 'Play');
+      const s = !audio.muted && !broken; vp.classList.toggle('sound', s); sndBtn.setAttribute('aria-pressed', s); sndBtn.setAttribute('aria-label', s ? 'Mute' : 'Turn sound on');
+      chip.hidden = s || !vp.classList.contains('started') || broken;
+    };
+    const play = async () => {
+      vp.classList.add('started'); if (idx >= 0) counters(scenes[idx]);
+      if (now() >= TOTAL - .05) { if (broken) clock = 0; else audio.currentTime = 0; idx = -1; }
+      if (broken) { fakePlaying = true; last = performance.now(); }
+      else { try { await audio.play(); } catch { if (!audio.muted) { audio.muted = true; try { await audio.play(); } catch { broken = true; fakePlaying = true; last = performance.now(); } } else { broken = true; fakePlaying = true; last = performance.now(); } } }
+      ui(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
+    };
+    const pause = () => { if (broken) fakePlaying = false; else audio.pause(); cancelAnimationFrame(raf); ui(); };
+    const seek = k => { if (broken) clock = STARTS[k]; else audio.currentTime = STARTS[k] + .01; idx = -1; render(); };
+    audio.addEventListener('ended', () => { cancelAnimationFrame(raf); render(); ui(); });
+    audio.addEventListener('pause', ui); audio.addEventListener('play', ui);
+    audio.addEventListener('error', () => { if (!broken) { broken = true; clock = audio.currentTime || 0; } ui(); });
+    const withSound = () => { audio.muted = false; play(); };
+    $('#vpBig').onclick = withSound;
+    chip.onclick = e => { e.stopPropagation(); withSound(); };
+    sndBtn.onclick = () => { audio.muted = !audio.muted; if (!audio.muted && !isPlaying()) play(); ui(); };
+    playBtn.onclick = () => isPlaying() ? pause() : play();
+    $('.vp-screen', vp).addEventListener('click', e => { if (!e.target.closest('a,.vp-big,.vp-snd-chip') && vp.classList.contains('started')) isPlaying() ? pause() : play(); });
+    $$('button', seg).forEach((b, k) => b.onclick = () => { seek(k); play(); });
+    $$('button', ch).forEach((b, k) => b.onclick = () => { seek(k); play(); });
     $('#vpFs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else vp.requestFullscreen?.(); };
-    vp.addEventListener('keydown', e => { if (e.key === ' ' && e.target === vp) { e.preventDefault(); playing ? pause() : play(); } });
-    show(0); time.textContent = `0:00 / ${mm(TOTAL / 1000)}`;
+    show(0); render(); ui();
     // silent preview when scrolled into view; sound needs a tap (browser autoplay rules)
     let auto = false;
     new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !auto && !reduce) { auto = true; play(); }
-      if (!e.isIntersecting && playing) pause();
+      if (e.isIntersecting && !auto && !reduce) { auto = true; audio.preload = 'auto'; play(); }
+      if (!e.isIntersecting && isPlaying()) pause();
     }, { threshold: .6 }).observe(vp);
-    addEventListener('pagehide', () => stopVoice());
-    document.addEventListener('visibilitychange', () => { if (document.hidden && playing) pause(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden && isPlaying()) pause(); });
   })();
 
   /* ---------- hero globe (multi-chain arcs) ---------- */
