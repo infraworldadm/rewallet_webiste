@@ -823,13 +823,14 @@
     audio.src = 'assets/explainer/narration.mp3'; audio.preload = 'metadata'; audio.muted = true;
     audio.setAttribute('playsinline', ''); audio.setAttribute('webkit-playsinline', ''); audio.hidden = true;
     vp.appendChild(audio);
-    let idx = -1, raf, useClock = false, clockOn = false, clock = 0, last = 0, pendingSeek = null, audioFailed = false;
+    // our own clock is the single source of truth (iOS reports audio state unreliably); audio just follows it
+    let idx = -1, raf, playing = false, sound = false, clock = 0, last = 0, audioFailed = false;
     const mm = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-    const now = () => useClock ? clock : (pendingSeek ?? audio.currentTime);
-    const isPlaying = () => useClock ? clockOn : !audio.paused && !audio.ended;
-    const soundOn = () => !useClock && !audio.muted;
-    const setTime = t => { clock = t; if (audio.readyState >= 1) { try { audio.currentTime = t; pendingSeek = null; } catch { pendingSeek = t; } } else pendingSeek = t; };
-    audio.addEventListener('loadedmetadata', () => { if (pendingSeek != null) { try { audio.currentTime = pendingSeek; } catch {} pendingSeek = null; } });
+    const now = () => clock;
+    const isPlaying = () => playing;
+    const soundOn = () => sound && !audioFailed;
+    const syncAudio = () => { if (audio.readyState >= 1) { try { audio.currentTime = clock; } catch {} } };
+    audio.addEventListener('loadedmetadata', () => { if (soundOn()) syncAudio(); });
     const counters = sc => $$('[data-to]', sc).forEach(el => {
       const to = +el.dataset.to, suf = el.dataset.suf || '', dur = to === 100 ? 3400 : 2200, t0 = performance.now();
       const st = n => { const p = Math.min((n - t0) / dur, 1); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suf; if (p < 1 && scenes[idx] === sc) requestAnimationFrame(st); };
@@ -855,39 +856,39 @@
       chip.hidden = s || audioFailed || !vp.classList.contains('started');
     };
     const loop = n => {
-      if (useClock && clockOn) { clock += Math.max(0, n - last) / 1000; last = n; if (clock >= TOTAL) { clock = TOTAL; clockOn = false; } }
+      if (playing) {
+        const audOk = soundOn() && !audio.paused && audio.readyState >= 2;
+        if (audOk && Math.abs(audio.currentTime - clock) < 1.5) clock = audio.currentTime;
+        else clock += Math.min(.25, Math.max(0, n - last) / 1000);
+        last = n;
+        if (clock >= TOTAL) { clock = TOTAL; playing = false; audio.pause(); }
+      }
       render(); ui();
-      if (isPlaying()) raf = requestAnimationFrame(loop);
+      if (playing) raf = requestAnimationFrame(loop);
     };
     const startLoop = () => { cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(loop); };
-    const runClock = () => { useClock = true; clockOn = true; audio.pause(); startLoop(); ui(); };
     // must be called synchronously from a tap when sound is wanted (iOS rule)
     const play = withSound => {
       const first = !vp.classList.contains('started');
       vp.classList.add('started');
-      if (now() >= TOTAL - .05) { setTime(0); idx = -1; }
+      if (clock >= TOTAL - .05) { clock = 0; idx = -1; }
       if (first && idx >= 0) counters(scenes[idx]);
-      if (withSound) {
-        if (useClock) { setTime(clock); useClock = false; clockOn = false; }
-        audio.muted = false;
-      } else if (useClock) { runClock(); return; }
-      if (audioFailed) { runClock(); return; }
-      const pr = audio.play();
+      if (withSound) sound = true;
+      playing = true;
+      if (soundOn()) {
+        audio.muted = false; syncAudio();
+        const pr = audio.play();
+        if (pr && pr.catch) pr.catch(() => { sound = false; ui(); }); // refused: scenes keep moving silently
+      }
       startLoop(); ui();
-      if (pr && pr.catch) pr.catch(() => {
-        // browser refused (e.g. silent autoplay on iOS): keep the scenes moving on the clock; a tap adds sound
-        clock = audio.currentTime || clock; audio.muted = true; runClock();
-      });
     };
-    const pause = () => { clockOn = false; audio.pause(); cancelAnimationFrame(raf); ui(); };
-    const seek = k => { setTime(STARTS[k] + .01); idx = -1; render(); };
-    audio.addEventListener('ended', () => { cancelAnimationFrame(raf); render(); ui(); });
-    audio.addEventListener('pause', ui); audio.addEventListener('playing', ui);
-    audio.addEventListener('error', () => { audioFailed = true; if (isPlaying() && !useClock) runClock(); ui(); });
+    const pause = () => { playing = false; audio.pause(); cancelAnimationFrame(raf); ui(); };
+    const seek = k => { clock = STARTS[k] + .01; syncAudio(); idx = -1; render(); };
+    audio.addEventListener('error', () => { audioFailed = true; ui(); });
     $('#vpBig').addEventListener('click', () => play(true));
     chip.addEventListener('click', e => { e.stopPropagation(); play(true); });
     sndBtn.addEventListener('click', () => {
-      if (soundOn()) { audio.muted = true; ui(); return; }
+      if (soundOn()) { sound = false; audio.pause(); ui(); return; }
       play(true);
     });
     playBtn.addEventListener('click', () => isPlaying() ? pause() : play(soundOn() || vp.classList.contains('started')));
