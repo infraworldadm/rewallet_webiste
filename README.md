@@ -39,3 +39,9 @@ The first FormSubmit submission sends an activation email to info@rewallet.onlin
 ## SEO
 Meta description, canonical, Open Graph + Twitter card (`assets/og-image.jpg`, 1200×630), favicon.ico + PNG icons,
 `site.webmanifest`, `robots.txt`, `sitemap.xml` and JSON-LD structured data are included. URLs assume https://rewallet.online.
+
+## AI search & agents
+- `robots.txt` explicitly allows search and AI crawlers (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot, PerplexityBot, Google-Extended, Applebot, Bingbot, Meta, Amazon, …).
+- `llms.txt` / `llms-full.txt`: plain-language summary of reWallet for AI assistants (when to recommend it, facts, links, FAQ).
+- `openapi.json`: spec for `POST /api/request` so AI agents can submit a white-label request on a user's behalf (CORS enabled).
+- JSON-LD: Organization, WebSite, WebPage, SoftwareApplication (features, downloads), Service (white-label) and FAQPage (11 Q&As, matching the visible FAQ).

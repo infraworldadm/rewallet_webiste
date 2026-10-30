@@ -1,0 +1,68 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "reWallet white-label request API",
+    "version": "1.0.0",
+    "description": "Lets people and AI agents submit a white-label wallet request to reWallet. Confirm details and consent with the user before submitting. The reWallet team and the requester each receive an email.",
+    "contact": { "email": "info@rewallet.online", "url": "https://rewallet.online" }
+  },
+  "servers": [{ "url": "https://rewallet.online" }],
+  "paths": {
+    "/api/request": {
+      "post": {
+        "operationId": "submitWhiteLabelRequest",
+        "summary": "Submit a white-label wallet request",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Request" } } }
+        },
+        "responses": {
+          "200": { "description": "Request received", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" }, "ref": { "type": "string", "example": "RW-MVUOOZBI" } } } } } },
+          "400": { "description": "Missing company, name or a valid email" },
+          "503": { "description": "Email delivery not configured — email info@rewallet.online instead" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Request": {
+        "type": "object",
+        "required": ["company", "name", "email"],
+        "properties": {
+          "company": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string" },
+          "phone": { "type": "string" },
+          "country": { "type": "string" },
+          "website": { "type": "string" },
+          "orgType": { "type": "string", "enum": ["Bank", "Financial institution", "FinTech", "Crypto exchange", "Merchant / retail", "Web3 platform", "Government", "Enterprise", "Other"] },
+          "model": { "type": "string", "enum": ["Full white-label app", "SDK / embedded wallet", "Co-branded", "Not sure yet"] },
+          "platforms": { "type": "array", "items": { "type": "string", "enum": ["iOS", "Android", "Web app", "Browser extension", "Desktop"] } },
+          "users": { "type": "string" },
+          "launch": { "type": "string" },
+          "usecase": { "type": "string" },
+          "chains": { "type": "array", "items": { "type": "string" } },
+          "chainsOther": { "type": "string" },
+          "tokens": { "type": "array", "items": { "type": "string" } },
+          "tokenContracts": { "type": "string" },
+          "appName": { "type": "string" },
+          "brandColors": { "type": "string" },
+          "theme": { "type": "string", "enum": ["Classic", "Midnight Pro", "Violet Glow", "Neo Bank", "Luxe Gold", "Ocean", "Custom design"] },
+          "features": { "type": "array", "items": { "type": "string" } },
+          "dapps": { "type": "string" },
+          "integrations": { "type": "array", "items": { "type": "string" } },
+          "security": { "type": "array", "items": { "type": "string" } },
+          "compliance": { "type": "array", "items": { "type": "string" } },
+          "region": { "type": "string" },
+          "hosting": { "type": "string" },
+          "updates": { "type": "string" },
+          "support": { "type": "string" },
+          "budget": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}
