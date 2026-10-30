@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>reWallet — One Wallet. Every Network. Complete Control.</title>
-<meta name="description" content="reWallet is a non-custodial, multi-network crypto wallet by ReSystem. Swaps, cross-chain bridge, NFTs, reID cashback and white-label for enterprises.">
+<meta name="description" content="reWallet is a decentralized, non-custodial, multi-network crypto wallet. Swaps, cross-chain bridge, NFTs, reID cashback and white-label for enterprises.">
 <meta name="theme-color" content="#fbfaff">
 <script>try{var t=localStorage.getItem("rw-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}</script>
 <meta property="og:title" content="reWallet — One Wallet. Every Network. Complete Control.">
@@ -49,11 +49,21 @@
 
 <!-- HERO -->
 <section class="hero">
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="hgrid" aria-hidden="true"></div>
   <canvas id="particles" aria-hidden="true"></canvas>
+  <div class="coins" aria-hidden="true">
+    <span class="coin k1"><img src="assets/usdt.png" alt=""></span>
+    <span class="coin k2"><img src="assets/bnb.png" alt=""></span>
+    <span class="coin k3"><img src="assets/tron.png" alt=""></span>
+    <span class="coin k4 eth"><svg viewBox="0 0 32 32"><path fill="#fff" fill-opacity=".6" d="M16.5 4v8.9l7.5 3.3z"/><path fill="#fff" d="M16.5 4 9 16.2l7.5-3.3z"/><path fill="#fff" fill-opacity=".6" d="M16.5 21.9V28l7.5-10.4z"/><path fill="#fff" d="M16.5 28v-6.1L9 17.6z"/></svg></span>
+    <span class="coin k5 usdc">$</span>
+    <span class="beam b1"></span><span class="beam b2"></span><span class="beam b3"></span>
+  </div>
   <div class="hero-bg" style="background-image:url(assets/hero.jpg)"></div>
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <a href="https://rewallet.online" class="pill reveal"><i class="dot"></i> rewallet.online · Non-custodial · Powered by INFRA</a>
+      <a href="https://rewallet.online" class="pill reveal"><i class="dot"></i> rewallet.online · Decentralized · Non-custodial</a>
       <h1 class="reveal">One Wallet.<br><span class="grad">Every Network.</span><br>Complete Control.</h1>
       <p class="lead reveal">A non-custodial, multi-network crypto wallet. Your keys, your assets — with swaps, cross-chain bridging, NFTs and reID cashback in one secure app.</p>
       <div class="hero-ctas reveal">
@@ -61,7 +71,7 @@
         <a href="#contact" class="btn btn-ghost">Request access</a>
       </div>
       <div class="hero-stats reveal">
-        <div><b data-count="4">0</b><span>Live networks</span></div>
+        <div><b data-count="3">0</b><span>Live networks</span></div>
         <div><b data-count="7" data-suffix="+">0</b><span>Coming soon</span></div>
         <div><b>0</b><span>Account freezes</span></div>
       </div>
@@ -70,7 +80,7 @@
       <div class="phone-stage" id="heroStage">
         <div class="float-chip c1"><img src="assets/usdt.png" alt=""> +32 USDT</div>
         <div class="float-chip c2"><span class="ok">✓</span> Swap complete</div>
-        <div class="float-chip c3">⚡ Cashback +24 INFRA</div>
+        <div class="float-chip c3">⚡ Cashback +2.40 USDT</div>
         <div class="phone tilt" data-phone="hero"></div>
       </div>
       <div class="qr-card">
@@ -85,8 +95,8 @@
 <!-- MARQUEE -->
 <section class="marquee" aria-label="Supported tokens and networks">
   <div class="track">
-    <span>INFRA</span><span>TRX</span><span>Ethereum</span><span>BSC</span><span>TRON</span><span>USDT</span><span>USDC</span><span>ERC20</span><span>TRC20</span><span>NFTs</span><span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span><span>Bitcoin</span>
-    <span>INFRA</span><span>TRX</span><span>Ethereum</span><span>BSC</span><span>TRON</span><span>USDT</span><span>USDC</span><span>ERC20</span><span>TRC20</span><span>NFTs</span><span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span><span>Bitcoin</span>
+    <span>BNB Chain</span><span>TRX</span><span>Ethereum</span><span>BSC</span><span>TRON</span><span>USDT</span><span>USDC</span><span>ERC20</span><span>TRC20</span><span>NFTs</span><span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span><span>Bitcoin</span>
+    <span>BNB Chain</span><span>TRX</span><span>Ethereum</span><span>BSC</span><span>TRON</span><span>USDT</span><span>USDC</span><span>ERC20</span><span>TRC20</span><span>NFTs</span><span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span><span>Bitcoin</span>
   </div>
 </section>
 
@@ -96,7 +106,7 @@
     <div class="sec-head reveal">
       <span class="eyebrow">Everything in one wallet</span>
       <h2>Identity, payments and digital assets — <span class="grad">together.</span></h2>
-      <p>reWallet connects users seamlessly to the wider ReSystem ecosystem without ever giving up ownership.</p>
+      <p>One decentralized wallet for every network — without ever giving up ownership.</p>
     </div>
 
     <div class="bento">
@@ -117,7 +127,7 @@
           <li>Import your verified identity</li>
           <li>Receive cashback automatically</li>
           <li>Access connected applications</li>
-          <li>Securely sign in across the ReSystem ecosystem</li>
+          <li>Securely sign in across connected apps</li>
           <li>Manage identity and wallet from one place</li>
         </ul>
       </article>
@@ -134,19 +144,19 @@
       <article class="card violet reveal b-swap">
         <h3>Instant Token Swaps</h3>
         <p>Swap across supported networks with transparent rates, network fees, price impact, minimum received, liquidity and estimated arrival time.</p>
-        <div class="chips"><span>INFRA</span><span>USDT</span><span>USDC</span><span>ETH</span><span>BNB</span><span>ERC20</span><span>TRC20</span><span>TRX</span></div>
+        <div class="chips"><span>USDT</span><span>USDC</span><span>ETH</span><span>BNB</span><span>ERC20</span><span>TRC20</span><span>TRX</span></div>
       </article>
 
       <article class="card black reveal b-bridge">
         <h3>Cross-Chain Bridge</h3>
         <p class="muted">Move assets seamlessly between major networks.</p>
-        <div class="bridge-rows"><div class="br"><span class="net"><i class="nd" style="--c:#627eea"></i>Ethereum</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#f3ba2f"></i>BNB Chain</span></div><div class="br"><span class="net"><i class="nd" style="--c:#f3ba2f"></i>BNB Chain</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#ff3b30"></i>TRON</span></div><div class="br"><span class="net"><i class="nd" style="--c:#ff3b30"></i>TRON</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#7000ff"></i>INFRA</span></div><div class="br"><span class="net"><i class="nd" style="--c:#7000ff"></i>INFRA</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#f3ba2f"></i>BNB Chain</span></div><div class="br"><span class="net"><i class="nd" style="--c:#28a0f0"></i>Arbitrum</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#ff0420"></i>Optimism</span></div><div class="br"><span class="net"><i class="nd" style="--c:#0052ff"></i>Base</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#627eea"></i>Ethereum</span></div></div>
-        <p class="note">Any-to-any routing — e.g. TRON → INFRA → BNB Chain in one step.</p>
+        <div class="bridge-rows"><div class="br"><span class="net"><i class="nd" style="--c:#627eea"></i>Ethereum</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#f3ba2f"></i>BNB Chain</span></div><div class="br"><span class="net"><i class="nd" style="--c:#f3ba2f"></i>BNB Chain</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#ff3b30"></i>TRON</span></div><div class="br"><span class="net"><i class="nd" style="--c:#ff3b30"></i>TRON</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#28a0f0"></i>Arbitrum</span></div><div class="br"><span class="net"><i class="nd" style="--c:#8247e5"></i>Polygon</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#f3ba2f"></i>BNB Chain</span></div><div class="br"><span class="net"><i class="nd" style="--c:#28a0f0"></i>Arbitrum</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#ff0420"></i>Optimism</span></div><div class="br"><span class="net"><i class="nd" style="--c:#0052ff"></i>Base</span><i class="flow"></i><span class="net"><i class="nd" style="--c:#627eea"></i>Ethereum</span></div></div>
+        <p class="note">Any-to-any routing — e.g. TRON → Router → Arbitrum in one step.</p>
       </article>
 
       <article class="card light img-card reveal b-fast" style="--img:url(assets/coins.jpg)">
         <h3>Fast &amp; Low-Cost</h3>
-        <p>Powered by the INFRA Blockchain for fast confirmations, low transaction fees, optimized routing and enterprise-grade performance.</p>
+        <p>Smart routing for fast confirmations, low transaction fees and enterprise-grade performance on every network.</p>
       </article>
 
       <article class="card light reveal b-nft">
@@ -209,9 +219,10 @@
         <button class="dm" data-go="send"><b>02</b><span><strong>Send</strong><em>Verify with Face ID</em></span></button>
         <button class="dm" data-go="receive"><b>03</b><span><strong>Receive</strong><em>QR &amp; address</em></span></button>
         <button class="dm" data-go="swap"><b>04</b><span><strong>Swap</strong><em>Live quote &amp; slippage</em></span></button>
-        <button class="dm" data-go="bridge"><b>05</b><span><strong>Bridge</strong><em>Cross-chain to INFRA</em></span></button>
+        <button class="dm" data-go="bridge"><b>05</b><span><strong>Bridge</strong><em>Any network to any network</em></span></button>
         <button class="dm" data-go="rewards"><b>06</b><span><strong>Cashback</strong><em>Powered by reID</em></span></button>
-        <button class="dm" data-go="settings"><b>07</b><span><strong>Security &amp; Networks</strong><em>Biometrics, custom RPC</em></span></button>
+        <button class="dm" data-go="pay"><b>07</b><span><strong>Merchant Pay</strong><em>Scan &amp; pay with cashback</em></span></button>
+        <button class="dm" data-go="settings"><b>08</b><span><strong>Security &amp; Networks</strong><em>Biometrics, custom RPC</em></span></button>
       </div>
 
       <div class="demo-phone reveal">
@@ -229,7 +240,7 @@
           </div>
           <label>Secondary currency (crypto)</label>
           <div class="seg" id="cryptoSeg">
-            <button data-crypto="USDT" class="on">USDT</button><button data-crypto="USDC">USDC</button><button data-crypto="ETH">ETH</button><button data-crypto="INFRA">INFRA</button>
+            <button data-crypto="USDT" class="on">USDT</button><button data-crypto="USDC">USDC</button><button data-crypto="ETH">ETH</button><button data-crypto="BNB">BNB</button>
           </div>
         </div>
         <div class="side-card">
@@ -249,7 +260,7 @@
     <div class="reveal">
       <span class="eyebrow">Secure wallet management</span>
       <h2>Multiple layers of protection. <span class="grad">Zero custody.</span></h2>
-      <p class="lead">Keys are generated and encrypted on your device. Nobody — not even ReSystem — can move, freeze or recover your assets without you.</p>
+      <p class="lead">Keys are generated and encrypted on your device. Nobody — not even reWallet — can move, freeze or recover your assets without you.</p>
       <div class="sec-list">
         <div class="sl"><i>◉</i><div><b>Face ID / Fingerprint &amp; Passkeys</b><span>Biometric approval for every sensitive action.</span></div></div>
         <div class="sl"><i>▦</i><div><b>PIN &amp; Recovery Phrase</b><span>12/24-word backup that only you hold.</span></div></div>
@@ -275,14 +286,14 @@
     <div class="sec-head reveal">
       <span class="eyebrow">Cross-chain bridge · mock</span>
       <h2>Move assets between networks <span class="grad">in seconds.</span></h2>
-      <p>Any network to any network — Ethereum ↔ BNB Chain, TRON ↔ INFRA, Arbitrum ↔ Optimism, Base and more. reWallet finds the best route, including multi-hop routes via INFRA. Try the interactive mock below.</p>
+      <p>Any network to any network — Ethereum ↔ BNB Chain, BNB Chain ↔ TRON, Arbitrum ↔ Optimism, Base and more. reWallet finds the best route, including multi-hop routes. Try the interactive mock below.</p>
     </div>
     <div class="xb reveal" id="xb">
       <div class="xb-form">
         <div class="xb-chains">
-          <div class="xb-ch"><small>From</small><div class="xb-sel"><img class="xb-ic" data-ic="from" alt=""><select id="xbFrom" aria-label="From network"><option>Ethereum</option><option>BNB Chain</option><option selected>TRON</option><option>INFRA</option><option>Arbitrum</option><option>Optimism</option><option>Base</option><option>Polygon</option><option>Avalanche</option></select></div></div>
+          <div class="xb-ch"><small>From</small><div class="xb-sel"><img class="xb-ic" data-ic="from" alt=""><select id="xbFrom" aria-label="From network"><option>Ethereum</option><option>BNB Chain</option><option selected>TRON</option><option>Arbitrum</option><option>Optimism</option><option>Base</option><option>Polygon</option><option>Avalanche</option></select></div></div>
           <button class="xb-swap" id="xbSwap" aria-label="Switch networks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h13l-4-4M17 17H4l4 4"/></svg></button>
-          <div class="xb-ch"><small>To</small><div class="xb-sel"><img class="xb-ic" data-ic="to" alt=""><select id="xbTo" aria-label="To network"><option>Ethereum</option><option selected>BNB Chain</option><option>TRON</option><option>INFRA</option><option>Arbitrum</option><option>Optimism</option><option>Base</option><option>Polygon</option><option>Avalanche</option></select></div></div>
+          <div class="xb-ch"><small>To</small><div class="xb-sel"><img class="xb-ic" data-ic="to" alt=""><select id="xbTo" aria-label="To network"><option>Ethereum</option><option selected>BNB Chain</option><option>TRON</option><option>Arbitrum</option><option>Optimism</option><option>Base</option><option>Polygon</option><option>Avalanche</option></select></div></div>
         </div>
         <div class="xb-amt">
           <small>Amount</small>
@@ -305,7 +316,7 @@
           <div class="xb-line"><i class="xb-pkt"></i></div>
           <div class="xb-node hub"><img src="assets/icon.png" alt=""><b>reWallet</b><span id="xbHub">Bridge router</span></div>
           <div class="xb-line"><i class="xb-pkt"></i></div>
-          <div class="xb-node" id="xbN2"><img data-ic="to" alt=""><b id="xbL2">INFRA</b><span>Destination</span></div>
+          <div class="xb-node" id="xbN2"><img data-ic="to" alt=""><b id="xbL2">BNB Chain</b><span>Destination</span></div>
         </div>
         <ol class="xb-steps" id="xbSteps">
           <li><b>Approve &amp; sign</b><span>Face ID confirmation in wallet</span></li>
@@ -313,7 +324,7 @@
           <li><b>Relay &amp; verify</b><span>Proof verified by the bridge network</span></li>
           <li><b>Release on destination</b><span>Funds arrive in your wallet</span></li>
         </ol>
-        <div class="xb-soon">Ethereum · BNB Chain · TRON · INFRA · Arbitrum · Optimism · Base · Polygon · Avalanche</div>
+        <div class="xb-soon">Ethereum · BNB Chain · TRON · Arbitrum · Optimism · Base · Polygon · Avalanche</div>
       </div>
     </div>
   </div>
@@ -334,7 +345,7 @@
         <div>
           <h4>Supported networks</h4>
           <div class="netpills live">
-            <span style="--c:#00e5ff">INFRA</span><span style="--c:#8b7cff">Ethereum</span><span style="--c:#f3ba2f">BSC</span><span style="--c:#ff3b30">TRON</span>
+            <span style="--c:#8b7cff">Ethereum</span><span style="--c:#f3ba2f">BSC</span><span style="--c:#ff3b30">TRON</span>
           </div>
         </div>
         <div>
@@ -343,9 +354,9 @@
             <span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span><span>Bitcoin</span>
           </div>
         </div>
-        <div class="infra-note">
-          <b>Fast &amp; Low-Cost on INFRA</b>
-          <p>Native support for the INFRA Network — fast confirmations, low fees and optimized routing by default.</p>
+        <div class="fast-note">
+          <b>Fast &amp; low-cost by design</b>
+          <p>Smart fee estimation and optimized routing across every supported network — plus custom EVM networks via RPC.</p>
         </div>
       </div>
     </div>
@@ -354,44 +365,97 @@
 
 <!-- ENTERPRISE / WHITE LABEL -->
 <section id="enterprise" class="sec ent-sec">
-  <div class="wrap ent-grid">
-    <div class="reveal">
+  <div class="wrap">
+    <div class="sec-head reveal">
       <span class="eyebrow">White-label &amp; enterprise ready</span>
-      <h2>Your brand. <span class="grad">Our wallet engine.</span></h2>
-      <p class="lead">Launch a fully branded non-custodial wallet for your customers. Try the configurator — the preview updates instantly.</p>
-
-      <div class="wl">
-        <label for="wlName">App name</label>
-        <input id="wlName" maxlength="18" value="reWallet">
-        <label>Brand color</label>
-        <div class="swatches" id="swatches">
-          <button style="--s:#7000ff" class="on" aria-label="Violet"></button>
-          <button style="--s:#00b386" aria-label="Green"></button>
-          <button style="--s:#0a66ff" aria-label="Blue"></button>
-          <button style="--s:#ff5a1f" aria-label="Orange"></button>
-          <button style="--s:#d4a017" aria-label="Gold"></button>
-          <button style="--s:#e6007a" aria-label="Magenta"></button>
-          <input type="color" id="wlColor" value="#7000ff" aria-label="Custom color">
-        </div>
-        <label>Customize</label>
-        <div class="chips sel" id="wlChips">
-          <span class="on">Company Logo</span><span class="on">Brand Colors</span><span class="on">App Name</span><span>Supported Networks</span><span>Default Tokens</span><span>Swap &amp; Bridge Providers</span><span>Cashback Programs</span><span>Transaction Fees</span><span>Merchant Integration</span><span>Compliance Settings</span>
-        </div>
-      </div>
-
-      <h4 class="built">Built for</h4>
-      <div class="chips dark-chips"><span>Banks</span><span>Financial Institutions</span><span>FinTech Companies</span><span>Crypto Exchanges</span><span>Merchants</span><span>Web3 Platforms</span><span>Governments</span><span>Enterprises</span></div>
+      <h2>Your brand. Your theme. <span class="grad">Our wallet engine.</span></h2>
+      <p>Configure a fully branded, non-custodial wallet in minutes. Every option changes the live phone — it jumps to the exact screen where that setting appears.</p>
     </div>
-    <div class="ent-visual reveal">
-      <div class="wl-frame">
-        <i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn rb"></i>
-        <span class="wl-stamp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>White-Label Ready</span>
-        <div class="phone tilt" data-phone="wl"></div>
-        <span class="wl-cap">Live preview · your brand on the reWallet engine</span>
+    <div class="ent-grid">
+      <form class="wlcfg reveal" id="wlcfg" onsubmit="return false">
+        <div class="wl-tabs" role="tablist" aria-label="White-label settings">
+          <button type="button" class="on" role="tab" aria-selected="true" aria-controls="wp-theme">Theme</button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="wp-brand">Brand</button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="wp-net">Networks &amp; Tokens</button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="wp-swap">Swap &amp; Fees</button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="wp-prog">Programs</button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="wp-comp">Compliance</button>
+        </div>
+        <div class="wl-pane" id="wp-theme" role="tabpanel">
+          <p class="wl-help">Pick a ready-made wallet theme to deploy — then fine-tune logo and colour in Brand.</p>
+          <div class="themes"><button type="button" class="thc" data-theme="classic" aria-pressed="false"><span class="thp th-classic"><i class="t1"></i><i class="t2"></i><i class="t3"></i><i class="t4"></i></span><b>Classic</b><small>Clean light · signature black</small></button><button type="button" class="thc" data-theme="midnight" aria-pressed="false"><span class="thp th-midnight"><i class="t1"></i><i class="t2"></i><i class="t3"></i><i class="t4"></i></span><b>Midnight Pro</b><small>Pure black · electric blue</small></button><button type="button" class="thc on" data-theme="violet" aria-pressed="true"><span class="thp th-violet"><i class="t1"></i><i class="t2"></i><i class="t3"></i><i class="t4"></i></span><b>Violet Glow</b><small>Brand gradient header</small></button><button type="button" class="thc" data-theme="neo" aria-pressed="false"><span class="thp th-neo"><i class="t1"></i><i class="t2"></i><i class="t3"></i><i class="t4"></i></span><b>Neo Bank</b><small>Soft mint · friendly</small></button><button type="button" class="thc" data-theme="luxe" aria-pressed="false"><span class="thp th-luxe"><i class="t1"></i><i class="t2"></i><i class="t3"></i><i class="t4"></i></span><b>Luxe Gold</b><small>Black &amp; gold · private</small></button><button type="button" class="thc" data-theme="ocean" aria-pressed="false"><span class="thp th-ocean"><i class="t1"></i><i class="t2"></i><i class="t3"></i><i class="t4"></i></span><b>Ocean</b><small>Deep blue · calm</small></button></div>
+        </div>
+        <div class="wl-pane" id="wp-brand" role="tabpanel" hidden>
+          <label class="wl-l">Company logo</label>
+          <div class="logos">
+            <button type="button" class="lgo on" data-logo="preset0" aria-label="Default mark"><img src="assets/icon.png" alt=""></button>
+            <button type="button" class="lgo" data-logo="preset1" aria-label="Circle monogram"><i class="lg c">R</i></button>
+            <button type="button" class="lgo" data-logo="preset2" aria-label="Square monogram"><i class="lg h">RW</i></button>
+            <label class="lgo up" id="wlUpBtn"><input type="file" id="wlUpload" accept="image/*" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg><span>Upload</span></label>
+          </div>
+          <label class="wl-l" for="wlName">App name</label>
+          <input class="wl-in" id="wlName" maxlength="18" value="reWallet">
+          <label class="wl-l">Brand colour</label>
+          <div class="swatches" id="swatches">
+            <button type="button" style="--s:#7000ff" class="on" aria-label="Violet"></button>
+            <button type="button" style="--s:#111114" aria-label="Black"></button>
+            <button type="button" style="--s:#0066ff" aria-label="Blue"></button>
+            <button type="button" style="--s:#00a36c" aria-label="Green"></button>
+            <button type="button" style="--s:#ff5a1f" aria-label="Orange"></button>
+            <button type="button" style="--s:#c9a227" aria-label="Gold"></button>
+            <button type="button" style="--s:#e6007a" aria-label="Magenta"></button>
+            <label class="cpick" title="Custom colour"><input type="color" id="wlColor" value="#7000ff" aria-label="Custom colour"></label>
+          </div>
+        </div>
+        <div class="wl-pane" id="wp-net" role="tabpanel" hidden>
+          <label class="wl-l">Supported networks</label>
+          <div class="tg" id="wlNets"><button type="button" data-v="Ethereum">Ethereum</button><button type="button" data-v="BNB Chain">BNB Chain</button><button type="button" data-v="TRON">TRON</button><button type="button" data-v="Arbitrum">Arbitrum</button><button type="button" data-v="Optimism">Optimism</button><button type="button" data-v="Base">Base</button><button type="button" data-v="Polygon">Polygon</button><button type="button" data-v="Avalanche">Avalanche</button></div>
+          <label class="wl-l">Default tokens</label>
+          <div class="tg" id="wlToks"><button type="button" data-v="USDT">USDT</button><button type="button" data-v="USDC">USDC</button><button type="button" data-v="ETH">ETH</button><button type="button" data-v="BNB">BNB</button><button type="button" data-v="TRX">TRX</button><button type="button" data-v="ARB">ARB</button></div>
+        </div>
+        <div class="wl-pane" id="wp-swap" role="tabpanel" hidden>
+          <label class="wl-l">Swap provider</label>
+          <div class="rg" id="wlSwap" role="radiogroup" aria-label="Swap provider"><button type="button" role="radio" data-v="reWallet Swap" class="on" aria-checked="true">reWallet Swap</button><button type="button" role="radio" data-v="1inch" aria-checked="false">1inch</button><button type="button" role="radio" data-v="Uniswap" aria-checked="false">Uniswap</button><button type="button" role="radio" data-v="PancakeSwap" aria-checked="false">PancakeSwap</button></div>
+          <label class="wl-l">Bridge provider</label>
+          <div class="rg" id="wlBridge" role="radiogroup" aria-label="Bridge provider"><button type="button" role="radio" data-v="reWallet Router" class="on" aria-checked="true">reWallet Router</button><button type="button" role="radio" data-v="LayerZero" aria-checked="false">LayerZero</button><button type="button" role="radio" data-v="Wormhole" aria-checked="false">Wormhole</button><button type="button" role="radio" data-v="Stargate" aria-checked="false">Stargate</button></div>
+          <label class="wl-l" for="wlFee">Platform transaction fee <output id="wlFeeV">0.30%</output></label>
+          <input type="range" id="wlFee" min="0" max="1" step="0.05" value="0.3">
+        </div>
+        <div class="wl-pane" id="wp-prog" role="tabpanel" hidden>
+          <div class="swr"><span><b>Cashback program</b><small>Reward users on payments &amp; swaps</small></span><input type="checkbox" class="tgl" id="wlCash" checked aria-label="Cashback program"></div>
+          <label class="wl-l" for="wlCashName">Program name</label>
+          <input class="wl-in" id="wlCashName" maxlength="22" value="reID Cashback">
+          <label class="wl-l" for="wlCashRate">Cashback rate <output id="wlCashRateV">1.0%</output></label>
+          <input type="range" id="wlCashRate" min="0.5" max="5" step="0.5" value="1">
+          <div class="swr"><span><b>Merchant integration</b><small>Adds “Pay” for in-store &amp; online checkout</small></span><input type="checkbox" class="tgl" id="wlMerch" checked aria-label="Merchant integration"></div>
+          <label class="wl-l" for="wlMerchName">Sample merchant</label>
+          <input class="wl-in" id="wlMerchName" maxlength="24" value="Dune Café · Dubai">
+        </div>
+        <div class="wl-pane" id="wp-comp" role="tabpanel" hidden>
+          <div class="swr"><span><b>Identity verification</b><small>reID badge &amp; KYC level</small></span><input type="checkbox" class="tgl" id="wlKyc" checked aria-label="Identity verification"></div>
+          <div class="swr"><span><b>Sanctions screening</b><small>Screen every outgoing address</small></span><input type="checkbox" class="tgl" id="wlScreen" checked aria-label="Sanctions screening"></div>
+          <div class="swr"><span><b>Travel Rule</b><small>Collect beneficiary data above $1,000</small></span><input type="checkbox" class="tgl" id="wlTravel" checked aria-label="Travel Rule"></div>
+          <label class="wl-l" for="wlRegion">Region profile</label>
+          <select class="wl-in" id="wlRegion"><option>UAE</option><option>EU (MiCA)</option><option>United Kingdom</option><option>Singapore</option><option>Global</option></select>
+        </div>
+        <div class="wl-foot"><p class="wl-now" id="wlNow" aria-live="polite"><b>Now showing:</b> Home screen</p><button type="button" class="btn btn-ghost sm" id="wlReset">Reset</button></div>
+      </form>
+      <div class="ent-visual reveal">
+        <div class="wl-frame">
+          <i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn rb"></i>
+          <span class="wl-stamp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>White-Label Ready</span>
+          <div class="phone tilt" data-phone="wl"></div>
+          <span class="wl-cap">Live preview · tap around the phone too</span>
+        </div>
       </div>
+    </div>
+    <div class="built reveal">
+      <h4>Built for</h4>
+      <div class="chips dark-chips"><span>Banks</span><span>Financial Institutions</span><span>FinTech Companies</span><span>Crypto Exchanges</span><span>Merchants</span><span>Web3 Platforms</span><span>Governments</span><span>Enterprises</span></div>
     </div>
   </div>
 </section>
+
 
 <!-- CTA BAND -->
 <section class="sec">
@@ -416,7 +480,7 @@
     </div>
     <div class="faq reveal">
       <details><summary>What does non-custodial mean?</summary><p>You alone hold your private keys and recovery phrase. reWallet never stores them on a server, so no one can freeze, move or access your assets without you.</p></details>
-      <details><summary>Which networks are supported?</summary><p>INFRA, Ethereum, BSC and TRON today. Polygon, Avalanche, Arbitrum, Optimism, Base, Solana and Bitcoin are coming soon. You can also add custom EVM networks via RPC and Chain ID.</p></details>
+      <details><summary>Which networks are supported?</summary><p>Ethereum, BNB Chain and TRON today. Polygon, Avalanche, Arbitrum, Optimism, Base, Solana and Bitcoin are coming soon. You can also add custom EVM networks via RPC and Chain ID.</p></details>
       <details><summary>How does reID cashback work?</summary><p>Connect your reID account and eligible transactions earn cashback automatically. Track pending, available, claimed and historical rewards inside the wallet.</p></details>
       <details><summary>What if I lose my phone?</summary><p>Restore your wallet on any device using your recovery phrase or private key. Keep your recovery phrase offline and never share it.</p></details>
       <details><summary>Can my company launch its own branded wallet?</summary><p>Yes. reWallet is white-label ready — logo, colors, app name, networks, default tokens, swap/bridge providers, cashback programs, fees and compliance settings are all configurable.</p></details>
@@ -433,10 +497,8 @@
       <p class="lead">Early access, white-label partnerships or integration questions — send us a note and the team will get back to you.</p>
       <div class="contact-info">
         <div><span>Email</span><b><a href="mailto:info@rewallet.online">info@rewallet.online</a></b></div>
-        <div><span>Company</span><b>ReSystem · Desert Tech Cloud Services LLC</b></div>
         <div><span>Location</span><b>Dubai, United Arab Emirates</b></div>
         <div><span>Website</span><b><a href="https://rewallet.online">rewallet.online</a></b></div>
-        <div><span>Ecosystem</span><b><a href="https://resystem.org" target="_blank" rel="noopener">resystem.org</a></b></div>
       </div>
     </div>
     <form class="form reveal" id="contactForm" novalidate>
@@ -467,8 +529,8 @@
 <footer class="foot">
   <div class="wrap foot-in">
     <img class="logo-l" src="assets/logo-light.png" alt="reWallet" height="24"><img class="logo-d" src="assets/logo-dark.png" alt="" height="24">
-    <p><a href="https://rewallet.online"><b>rewallet.online</b></a> · Part of the ReSystem ecosystem · Powered by INFRA Network</p>
-    <p class="muted">© <span id="yr"></span> ReSystem. Your wallet. Your keys. Your assets.</p>
+    <p><a href="https://rewallet.online"><b>rewallet.online</b></a> · Part of the ReSystem ecosystem</p>
+    <p class="muted">© <span id="yr"></span> reWallet. Your wallet. Your keys. Your assets.</p>
   </div>
 </footer>
 

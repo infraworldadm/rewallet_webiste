@@ -3,317 +3,429 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmt = (n, d = 2) => (+n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const uri = s => 'data:image/svg+xml,' + encodeURIComponent(s);
 
-  /* ---------- demo data ---------- */
-  const USD = { INFRA: 0.05, USDT: 1, USDC: 1, ETH: 3200, BNB: 600, TRX: 0.16 };
-  const FIAT = { USD: [1, '$'], EUR: [0.92, '€'], GBP: [0.79, '£'], INR: [83.5, '₹'], SAR: [3.75, 'SAR'] };
-  const TOK = {
-    INFRA: { bal: 12000, net: 'INFRA Network', col: '#f1e9ff', ic: 'assets/icon.png', chg: 5.1 },
-    USDT: { bal: 320, net: 'TRC20', col: '#26a17b', ic: 'assets/usdt.png', chg: 0.01 },
-    USDC: { bal: 50, net: 'ERC20', col: '#2775ca', chg: 0 },
-    ETH: { bal: 0.12, net: 'Ethereum', col: '#627eea', chg: 2.4 },
-    BNB: { bal: 0.5, net: 'BSC', col: '#f3ba2f', ic: 'assets/bnb.png', chg: -0.8 },
-    TRX: { bal: 900, net: 'TRON', col: '#ff3b30', ic: 'assets/tron.png', chg: 1.2 },
+  /* ---------- icons (line, 24px) ---------- */
+  const ic = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const I = {
+    send: ic('<path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/>'),
+    recv: ic('<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/>'),
+    swap: ic('<path d="M4 8h15l-4-4M20 16H5l4 4"/>'),
+    bridge: ic('<path d="M9.5 14.5 14.5 9.5M8 11l-2 2a3.5 3.5 0 0 0 5 5l2-2M16 13l2-2a3.5 3.5 0 0 0-5-5l-2 2"/>'),
+    pay: ic('<path d="M3 9h18M5 9l1.5-4h11L19 9M5 9v10h14V9M9 19v-5h6v5"/>'),
+    eye: ic('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+    chev: ic('<path d="m6 9 6 6 6-6"/>'),
+    right: ic('<path d="m9 18 6-6-6-6"/>'),
+    back: ic('<path d="M15 18 9 12l6-6"/>'),
+    info: ic('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'),
+    flip: ic('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),
+    sliders: ic('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'),
+    home: ic('<path d="M3 11 12 4l9 7v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
+    gift: ic('<rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v7h14v-7M12 8v12M12 8S10.5 4 8 4.5 8.5 8 12 8zm0 0s1.5-4 4-3.5S15.5 8 12 8z"/>'),
+    gear: ic('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'),
+    plus: ic('<path d="M12 5v14M5 12h14"/>'),
+    copy: ic('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>'),
+    scan: ic('<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/>'),
+    shield: ic('<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>'),
+    check: ic('<path d="m5 12 5 5 9-10"/>'),
+    bell: ic('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/>'),
+    face: ic('<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M9 9v1M15 9v1M12 9v4h-1M9 16c1.6 1.3 4.4 1.3 6 0"/>'),
+    store: ic('<path d="M4 10v10h16V10M3 10l2-6h14l2 6zM3 10c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3"/>'),
   };
+  const SB = `<svg viewBox="0 0 64 14" aria-hidden="true"><g fill="currentColor"><rect x="0" y="9" width="3" height="4" rx="1"/><rect x="4.5" y="6.5" width="3" height="6.5" rx="1"/><rect x="9" y="4" width="3" height="9" rx="1"/><rect x="13.5" y="1.5" width="3" height="11.5" rx="1"/><path d="M28 3.2c2.2 0 4.2.9 5.7 2.3l1.2-1.2A9.7 9.7 0 0 0 28 1.5a9.7 9.7 0 0 0-6.9 2.8l1.2 1.2A8 8 0 0 1 28 3.2zm0 3.4c1.3 0 2.5.5 3.3 1.3l1.2-1.2A6.3 6.3 0 0 0 28 4.9a6.3 6.3 0 0 0-4.5 1.8l1.2 1.2c.9-.8 2-1.3 3.3-1.3zM28 10l1.9-1.9a2.7 2.7 0 0 0-3.8 0z"/><rect x="40" y="1.5" width="21" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="42" y="3.5" width="17" height="7" rx="1.8"/><rect x="62" y="5" width="1.6" height="4" rx=".8" opacity=".4"/></g></svg>`;
+
+  /* ---------- assets / data ---------- */
+  const ETHI = uri('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627eea"/><path fill="#fff" fill-opacity=".6" d="M16.5 4v8.9l7.5 3.3z"/><path fill="#fff" d="M16.5 4 9 16.2l7.5-3.3z"/><path fill="#fff" fill-opacity=".6" d="M16.5 21.9V28l7.5-10.4z"/><path fill="#fff" d="M16.5 28v-6.1L9 17.6z"/></svg>');
+  const USDCI = uri('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#2775ca"/><path fill="#fff" d="M20.2 18.4c0-2.2-1.3-3-4-3.3-1.9-.3-2.3-.8-2.3-1.7s.7-1.5 1.9-1.5c1.1 0 1.8.4 2.1 1.4a.5.5 0 0 0 .5.3h1a.4.4 0 0 0 .4-.5 3.3 3.3 0 0 0-3-2.7V9.2a.5.5 0 0 0-.5-.5h-.9a.5.5 0 0 0-.5.5v1.2c-1.9.3-3 1.5-3 3.1 0 2.1 1.3 2.9 3.9 3.2 1.8.3 2.4.7 2.4 1.7s-.9 1.7-2.1 1.7c-1.6 0-2.2-.7-2.4-1.6a.5.5 0 0 0-.5-.4h-1a.4.4 0 0 0-.4.5c.3 1.6 1.3 2.7 3.4 3v1.2a.5.5 0 0 0 .5.5h.9a.5.5 0 0 0 .5-.5v-1.2c1.9-.3 3.1-1.6 3.1-3.4z"/><path fill="#fff" d="M12.8 24.6a8.9 8.9 0 0 1 0-17.2V6.2a10.1 10.1 0 0 0 0 19.6zm6.4-18.4v1.2a8.9 8.9 0 0 1 0 17.2v1.2a10.1 10.1 0 0 0 0-19.6z"/></svg>');
+  const circ = (c, t) => uri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="${c}"/><text x="16" y="20.5" font-family="Arial,sans-serif" font-weight="700" font-size="12" fill="#fff" text-anchor="middle">${t}</text></svg>`);
+  const TOKEN = {
+    USDT: { img: 'assets/usdt.png' }, USDC: { img: USDCI }, ETH: { img: ETHI },
+    BNB: { img: 'assets/bnb.png' }, TRX: { img: 'assets/tron.png' }, ARB: { img: circ('#28a0f0', 'AR') },
+  };
+  const NETS = {
+    Ethereum: { img: ETHI, eta: 180, gas: 2.4 },
+    'BNB Chain': { img: 'assets/bnb.png', eta: 45, gas: .12 },
+    TRON: { img: 'assets/tron.png', eta: 60, gas: .9 },
+    Arbitrum: { img: circ('#28a0f0', 'AR'), eta: 30, gas: .05 },
+    Optimism: { img: circ('#ff0420', 'OP'), eta: 30, gas: .04 },
+    Base: { img: circ('#0052ff', 'B'), eta: 25, gas: .02 },
+    Polygon: { img: circ('#8247e5', 'PO'), eta: 60, gas: .01 },
+    Avalanche: { img: circ('#e84142', 'AV'), eta: 20, gas: .08 },
+  };
+  const USD = { USDT: 1, USDC: 1, ETH: 3200, BNB: 600, TRX: 0.16, ARB: 0.8 };
+  const CHG = { USDT: 0.01, USDC: 0, ETH: 2.4, BNB: -0.8, TRX: 1.2, ARB: 3.6 };
+  const BAL = { USDT: 1320, USDC: 450, ETH: 0.42, BNB: 1.5, TRX: 2400, ARB: 300 };
+  const FIAT = { USD: [1, '$'], EUR: [0.92, '€'], GBP: [0.79, '£'], INR: [83.5, '₹'], SAR: [3.75, 'SAR '] };
   const state = { fiat: 'USD', crypto: 'USDT' };
-  const phones = [];
+  const fiat = usd => FIAT[state.fiat][1] + fmt(usd * FIAT[state.fiat][0]);
+  const dp = k => (USD[k] > 100 ? 4 : 2);
+  const tokImg = k => `<span class="tki"><img src="${TOKEN[k].img}" alt=""></span>`;
+  const netImg = n => `<span class="tki sm${NETS[n].ink ? ' ink' : ''}"><img src="${NETS[n].img}" alt=""></span>`;
+  /* any-to-any; TRON <-> EVM goes through the reWallet router as a multi-hop route */
+  const isHop = (f, t) => f !== t && (f === 'TRON') !== (t === 'TRON');
+  const routeTxt = (f, t) => isHop(f, t) ? `${f} → Router → ${t}` : `${f} → ${t}`;
+  const routeEta = (f, t) => NETS[f].eta + (isHop(f, t) ? 25 : 0);
+  const routeGas = (f, t) => NETS[f].gas + (isHop(f, t) ? NETS[t].gas : 0);
+  const eta = s => (s < 60 ? `~${s} sec` : `~${Math.round(s / 60)} min`);
 
-  const fmt = (n, d = 2) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
-  const fiatOf = usd => { const [r, s] = FIAT[state.fiat]; return (s.length > 1 ? s + ' ' : s) + fmt(usd * r); };
-  const totalUSD = () => Object.entries(TOK).reduce((a, [k, t]) => a + t.bal * USD[k], 0);
-  const icon = k => TOK[k].ic ? `<img src="${TOK[k].ic}" alt="">` : k.slice(0, 1);
-  const tokOpts = sel => Object.keys(TOK).map(k => `<option ${k === sel ? 'selected' : ''}>${k}</option>`).join('');
-
-  const svg = {
-    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
-    swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v14M3 14l4 4 4-4M17 20V6M13 10l4-4 4 4"/></svg>',
-    bridge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 17h20M5 17V9M19 17V9M2 9c5-6 15-6 20 0M12 17v-6"/></svg>',
-    gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v8h14v-8M12 8v13M12 8S10 3 7.5 4 9 8 12 8zm0 0s2-5 4.5-4S15 8 12 8z"/></svg>',
-    gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.8-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11h.1a2 2 0 1 1 0 4z"/></svg>',
+  const DEFAULT = {
+    name: 'reWallet', logo: 'preset0',
+    nets: ['Ethereum', 'BNB Chain', 'TRON', 'Arbitrum', 'Optimism', 'Base'],
+    tokens: ['USDT', 'USDC', 'ETH', 'BNB', 'TRX'],
+    swap: 'reWallet Swap', bridge: 'reWallet Router', fee: 0.3,
+    cash: true, cashName: 'reID Cashback', cashRate: 1,
+    merchant: true, merchantName: 'Dune Café · Dubai',
+    kyc: true, screen: true, travel: true, region: 'UAE',
   };
+  const THEMES = {
+    classic: { 'ph-bg': '#f2f2f5', 'ph-card': '#ffffff', 'ph-card2': '#ebebef', 'ph-ink': '#111114', 'ph-mut': '#86868f', 'ph-line': '#e3e3e8', act: '#111114', 'act-ink': '#ffffff', hcard: '#ffffff', 'hcard-ink': '#111114', 'hcard-mut': '#86868f', 'ph-tab': 'rgba(255,255,255,.92)' },
+    midnight: { 'ph-bg': '#000000', 'ph-card': '#0d0d0d', 'ph-card2': '#171717', 'ph-ink': '#ffffff', 'ph-mut': '#9a9a9a', 'ph-line': '#242424', act: '#0066ff', 'act-ink': '#ffffff', hcard: 'linear-gradient(160deg,#0b1d3d,#0d0d0d 70%)', 'hcard-ink': '#ffffff', 'hcard-mut': '#8fa3c4', 'ph-tab': 'rgba(10,10,10,.92)' },
+    violet: { 'ph-bg': '#f4f1ff', 'ph-card': '#ffffff', 'ph-card2': '#eee8ff', 'ph-ink': '#160a33', 'ph-mut': '#7b6f99', 'ph-line': '#e4dcfa', act: '#7000ff', 'act-ink': '#ffffff', hcard: 'linear-gradient(150deg,#7a14ff,#4b00c2)', 'hcard-ink': '#ffffff', 'hcard-mut': '#d9c8ff', 'ph-tab': 'rgba(255,255,255,.94)' },
+    neo: { 'ph-bg': '#edf7f1', 'ph-card': '#ffffff', 'ph-card2': '#e1f1e8', 'ph-ink': '#0f2a1d', 'ph-mut': '#698a79', 'ph-line': '#d4eadd', act: '#00a36c', 'act-ink': '#ffffff', hcard: 'linear-gradient(150deg,#c9f5dd,#ffffff)', 'hcard-ink': '#0f2a1d', 'hcard-mut': '#5d806d', 'ph-tab': 'rgba(255,255,255,.94)' },
+    luxe: { 'ph-bg': '#0b0a08', 'ph-card': '#16140f', 'ph-card2': '#1e1b14', 'ph-ink': '#f5eedc', 'ph-mut': '#a69d86', 'ph-line': '#2b271d', act: '#c9a227', 'act-ink': '#16140f', hcard: 'linear-gradient(150deg,#3a2e14,#12100b 75%)', 'hcard-ink': '#f5eedc', 'hcard-mut': '#c9b98d', 'ph-tab': 'rgba(14,13,10,.94)' },
+    ocean: { 'ph-bg': '#e9f1fb', 'ph-card': '#ffffff', 'ph-card2': '#dfeaf7', 'ph-ink': '#0b2340', 'ph-mut': '#66809e', 'ph-line': '#d2e1f2', act: '#0a66ff', 'act-ink': '#ffffff', hcard: 'linear-gradient(150deg,#0a66ff,#00b4d8)', 'hcard-ink': '#ffffff', 'hcard-mut': '#cfe6ff', 'ph-tab': 'rgba(255,255,255,.94)' },
+  };
+  const phones = [];
 
   /* ---------- phone factory ---------- */
   function createPhone(host, kind) {
-    const P = { host, kind, view: 'home', brand: '#7000ff', name: 'reWallet', slip: 0.5, cash: { pending: 62, available: 184, claimed: 1427.5 } };
+    const P = { host, kind, view: 'home', cfg: { ...DEFAULT, nets: [...DEFAULT.nets], tokens: [...DEFAULT.tokens] }, net: 'Ethereum', slip: 0.5, hidden: false,
+      cash: { pending: 6.2, available: 18.4, claimed: 142.75 } };
     host.innerHTML = `
+      <span class="hw hw1"></span><span class="hw hw2"></span><span class="hw hw3"></span>
       <div class="screen">
-        <div class="notch"></div>
-        <div class="sbar"><span>9:41</span><i>●●● ᯤ ▮</i></div>
-        <div class="views">
-          <section class="view on" data-v="home"></section>
-          <section class="view" data-v="send"></section>
-          <section class="view" data-v="receive"></section>
-          <section class="view" data-v="swap"></section>
-          <section class="view" data-v="bridge"></section>
-          <section class="view" data-v="rewards"></section>
-          <section class="view" data-v="settings"></section>
-        </div>
+        <div class="island"></div>
+        <div class="sbar"><span>9:41</span>${SB}</div>
+        <div class="views">${['home', 'send', 'receive', 'swap', 'bridge', 'rewards', 'settings', 'pay'].map(v => `<section class="view${v === 'home' ? ' on' : ''}" data-v="${v}"></section>`).join('')}</div>
         <nav class="tabbar">
-          <button data-go="home" class="on">${svg.home}Wallet</button>
-          <button data-go="swap">${svg.swap}Swap</button>
-          <button data-go="bridge">${svg.bridge}Bridge</button>
-          <button data-go="rewards">${svg.gift}Rewards</button>
-          <button data-go="settings">${svg.gear}Settings</button>
+          <button data-go="home" class="on">${I.home}<span>Wallet</span></button>
+          <button data-go="swap">${I.swap}<span>Swap</span></button>
+          <button data-go="bridge">${I.bridge}<span>Bridge</span></button>
+          <button data-go="rewards">${I.gift}<span>Rewards</span></button>
+          <button data-go="settings">${I.gear}<span>Settings</span></button>
         </nav>
+        <div class="homebar"></div>
         <div class="overlay"><div class="sheet"></div></div>
       </div>`;
     const V = n => $(`[data-v="${n}"]`, host);
-    const back = '<button data-go="home" aria-label="Back">←</button>';
+    const q = s => $(s, host);
+    const hdr = t => `<div class="hdr"><button class="ib" data-go="home" aria-label="Back">${I.back}</button><h6>${t}</h6><span class="ib ghost"></span></div>`;
+    const toks = () => P.cfg.tokens.filter(k => TOKEN[k]);
+    const tokOpts = sel => toks().map(k => `<option ${k === sel ? 'selected' : ''}>${k}</option>`).join('');
+    const total = () => toks().reduce((a, k) => a + BAL[k] * USD[k], 0);
+    const logoHTML = () => {
+      const c = P.cfg, ini = esc((c.name.replace(/[^A-Za-z0-9]/g, '') || 'rw'));
+      if (c.logo === 'upload' && c.logoData) return `<img src="${c.logoData}" alt="">`;
+      if (c.logo === 'preset1') return `<i class="lg c">${ini.charAt(0).toUpperCase()}</i>`;
+      if (c.logo === 'preset2') return `<i class="lg h">${ini.slice(0, 2).toUpperCase()}</i>`;
+      return `<img src="assets/icon.png" alt="" class="tint">`;
+    };
+    const avatar = () => `<span class="orbav"></span>`;
+    const acct = () => `<div class="acc"><span>Account 1 ${I.chev}</span><b>0x7325…5fCd</b></div>`;
 
     P.renderHome = () => {
-      const tot = totalUSD();
-      const cr = state.crypto;
+      const c = P.cfg, tot = total(), list = toks();
+      if (!c.nets.includes(P.net)) P.net = c.nets[0];
       V('home').innerHTML = `
-        <div class="top">
-          ${kind === 'wl' ? `<div class="wl-logo"><i></i><span class="wl-n">${esc(P.name)}</span></div>` : `<div class="net-sel"><i></i>INFRA Network ▾</div>`}
-          <div class="acct">Account 1 ▾<br><b>0x7325…5fCd</b></div>
+        ${kind === 'wl' ? `<div class="brandbar" data-hl="brand"><span class="blogo">${logoHTML()}</span><b>${esc(c.name)}</b><button class="ib ghost2" aria-label="Notifications">${I.bell}</button></div>` : ''}
+        <div class="hcard">
+          <div class="hrow">
+            <button class="netpill" data-act="net" data-hl="nets" aria-label="Switch network">${netImg(P.net)}<span>${esc(P.net)}</span>${I.chev}</button>
+            <div class="hright">${acct()}${avatar()}</div>
+          </div>
+          <div class="bal"><small>Balance</small>
+            <div class="bamt"><span class="bv">${P.hidden ? '••••••' : fiat(tot)}</span><button class="eye" aria-label="Hide balance">${I.eye}</button></div>
+            <div class="bsub">≈ ${fmt(tot / USD[state.crypto], dp(state.crypto))} ${state.crypto}</div>
+          </div>
+          ${c.kyc ? `<div class="kyc" data-hl="kyc">${I.shield}<span>reID verified</span></div>` : ''}
         </div>
-        <div class="bal"><small>Total balance</small>
-          <h5><span class="bv">${fiatOf(tot)}</span><button class="eye" aria-label="Hide balance">◉</button></h5>
-          <div class="sub">≈ ${fmt(tot / USD[cr])} ${cr}</div>
-          <span class="chg">▲ 1.84% today</span>
+        <div class="acts${c.merchant ? ' five' : ''}">
+          <button data-go="send"><span>${I.send}</span>Send</button>
+          <button data-go="receive"><span>${I.recv}</span>Receive</button>
+          <button data-go="swap"><span>${I.swap}</span>Swap</button>
+          <button data-go="bridge"><span>${I.bridge}</span>Bridge</button>
+          ${c.merchant ? `<button data-go="pay" data-hl="merchant"><span>${I.pay}</span>Pay</button>` : ''}
         </div>
-        <div class="acts">
-          <button data-go="send"><span>↑</span>Send</button>
-          <button data-go="receive"><span>↓</span>Receive</button>
-          <button data-go="swap"><span>⇄</span>Swap</button>
-          <button data-go="bridge"><span>⛓</span>Bridge</button>
+        ${c.cash ? `<button class="cb-banner" data-go="rewards" data-hl="cash"><span class="cb-ic">${I.gift}</span><span><small>${esc(c.cashName)} · ${fmt(c.cashRate, 1)}% back</small><b>${fmt(P.cash.available)} USDT available</b></span>${I.right}</button>` : ''}
+        <div class="tabs"><button class="on" data-t="tokens">Tokens</button><button data-t="nfts">NFTs</button></div>
+        <div class="tpane" data-p="tokens">
+          <div class="tools"><button class="pill2">Sort by ${I.chev}</button><button class="pill2" data-go="settings">${I.plus} Import</button></div>
+          <div class="tlist" data-hl="tokens">${list.map(k => `
+            <button class="tok" data-tok="${k}">${tokImg(k)}
+              <span class="nm"><b>${k}</b><small>${fmt(BAL[k], dp(k))} ${k}</small></span>
+              <span class="vl"><b>${fiat(BAL[k] * USD[k])}</b><small class="${CHG[k] > 0 ? 'up' : CHG[k] < 0 ? 'dn' : ''}">${CHG[k] > 0 ? '+' : ''}${CHG[k]}%</small></span>
+            </button>`).join('')}
+          </div>
+          <p class="imp">Don't see your token? <button data-go="settings">Import tokens</button></p>
         </div>
-        <div class="cashback-banner" data-go="rewards"><div>reID Cashback available<b>${fmt(P.cash.available)} INFRA</b></div><span>Claim →</span></div>
-        <div class="seg-t"><button class="on" data-t="tokens">Tokens</button><button data-t="nfts">NFTs</button></div>
-        <div class="tlist">${Object.entries(TOK).map(([k, t]) => `
-          <div class="tok" data-tok="${k}">
-            <div class="ic" style="background:${t.col}">${icon(k)}</div>
-            <div class="nm"><b>${k}</b><span>${fmt(t.bal, t.bal < 1 ? 4 : 2)} ${k} · ${t.net}</span></div>
-            <div class="vl"><b>${fiatOf(t.bal * USD[k])}</b><span style="color:${t.chg > 0 ? '#109c5c' : t.chg < 0 ? '#e2462b' : '#7d7795'}">${t.chg > 0 ? '+' : ''}${t.chg}%</span></div>
-          </div>`).join('')}
-          <div class="imp">Don't see your token? <a href="#" data-go="settings">Import tokens</a></div>
-        </div>
-        <div class="nfts" hidden>
-          <div><img src="assets/nft.jpg" alt=""><p>Genesis Pillar #12</p></div>
-          <div><i style="background:linear-gradient(135deg,#7000ff,#00e5ff)"></i><p>INFRA Pass #08</p></div>
-          <div><i style="background:linear-gradient(135deg,#ff5a1f,#ffd36e)"></i><p>Desert Dune #221</p></div>
-          <div><i style="background:linear-gradient(135deg,#0a66ff,#c9b0ff)"></i><p>reID Badge</p></div>
+        <div class="tpane nfts" data-p="nfts" hidden>
+          <div><img src="assets/nft.jpg" alt=""><p>Genesis Pillar<small>#12 · Ethereum</small></p></div>
+          <div><i style="background:conic-gradient(from 200deg,#7000ff,#00e5ff,#c9b0ff,#7000ff)"></i><p>Prism Pass<small>#08 · Base</small></p></div>
+          <div><i style="background:linear-gradient(135deg,#ff8a3d,#ffd36e)"></i><p>Desert Dune<small>#221 · Arbitrum</small></p></div>
+          <div><i style="background:linear-gradient(135deg,#0a66ff,#c9b0ff)"></i><p>reID Badge<small>Soulbound</small></p></div>
         </div>`;
     };
 
     P.renderSend = () => {
-      V('send').innerHTML = `
-        <div class="hdr">${back}<h6>Send</h6></div>
-        <div class="box"><label>Recipient</label><input class="s-to" placeholder="0x… or ENS / reID handle" value="0x9a1F…c42B"></div>
-        <div class="box"><label>Amount</label>
-          <div class="amt-row"><input class="s-amt" type="number" min="0" step="any" value="25"><span class="tsel"><select class="s-tok">${tokOpts('INFRA')}</select>▾</span></div>
-          <div class="mini"><span class="s-bal"></span><span><button class="s-max">MAX</button></span></div>
+      const c = P.cfg;
+      V('send').innerHTML = `${hdr('Send')}
+        <div class="card">
+          <label class="lab">To</label>
+          <div class="addr-in"><input class="s-to" value="0x9a1F…c42B" aria-label="Recipient"><button class="ib sm" aria-label="Scan">${I.scan}</button></div>
+          ${c.screen ? `<div class="note ok" data-hl="screen">${I.shield} Address screened · low risk</div>` : ''}
         </div>
-        <div class="kv"><div><span>Network</span><b class="s-net"></b></div><div><span>Network fee</span><b>~0.001 INFRA</b></div><div><span>Fiat value</span><b class="s-fv"></b></div></div>
+        <div class="card">
+          <label class="lab">Amount</label>
+          <div class="amtrow"><input class="big s-amt" type="number" min="0" step="any" value="25" aria-label="Amount"><label class="tpill"><span class="tp-i"></span><select class="s-tok" aria-label="Token">${tokOpts('USDT')}</select>${I.chev}</label></div>
+          <div class="brow"><span class="s-bal"></span><span><button class="chip s-half">50%</button><button class="chip s-max">Max</button></span></div>
+        </div>
+        <div class="note warn s-travel" hidden data-hl="travel">${I.info} Travel Rule: beneficiary details required above $1,000</div>
+        <div class="card det">
+          <div><span>Network</span><b>${esc(P.net)}</b></div>
+          <div><span>Network fee</span><b>${fiat(NETS[P.net].gas)}</b></div>
+          <div data-hl="fee"><span>Platform fee</span><b class="s-pf"></b></div>
+          <div><span>Total</span><b class="s-tot"></b></div>
+        </div>
         <button class="pbtn s-go">Review &amp; Send</button>`;
       const upd = () => {
-        const k = $('.s-tok', host).value, a = +$('.s-amt', host).value || 0;
-        $('.s-bal', host).textContent = `Balance: ${fmt(TOK[k].bal, 4)} ${k}`;
-        $('.s-net', host).textContent = TOK[k].net;
-        $('.s-fv', host).textContent = fiatOf(a * USD[k]);
-        $('.s-go', host).disabled = a <= 0 || a > TOK[k].bal;
-        $('.s-go', host).textContent = a > TOK[k].bal ? 'Insufficient balance' : 'Review & Send';
+        const k = q('.s-tok').value, a = +q('.s-amt').value || 0, v = a * USD[k];
+        q('.tp-i').innerHTML = tokImg(k);
+        q('.s-bal').textContent = `Balance: ${fmt(BAL[k], dp(k))}`;
+        q('.s-pf').textContent = `${fmt(c.fee)}% · ${fiat(v * c.fee / 100)}`;
+        q('.s-tot').textContent = fiat(v * (1 + c.fee / 100) + NETS[P.net].gas);
+        q('.s-travel').hidden = !(c.travel && v > 1000);
+        const g = q('.s-go'); g.disabled = a <= 0 || a > BAL[k];
+        g.textContent = a > BAL[k] ? 'Insufficient balance' : 'Review & Send';
       };
       V('send').addEventListener('input', upd);
-      $('.s-max', host).onclick = () => { $('.s-amt', host).value = TOK[$('.s-tok', host).value].bal; upd(); };
-      $('.s-go', host).onclick = () => {
-        const k = $('.s-tok', host).value, a = +$('.s-amt', host).value;
-        P.confirm(`Send ${fmt(a, 4)} ${k}`, 'Confirm with Face ID', () => { TOK[k].bal -= a; P.refresh(); }, `Sent ${fmt(a, 4)} ${k}`);
+      q('.s-max').onclick = () => { q('.s-amt').value = BAL[q('.s-tok').value]; upd(); };
+      q('.s-half').onclick = () => { q('.s-amt').value = +(BAL[q('.s-tok').value] / 2).toFixed(4); upd(); };
+      q('.s-go').onclick = () => {
+        const k = q('.s-tok').value, a = +q('.s-amt').value;
+        P.confirm(`Send ${fmt(a, dp(k))} ${k}`, `to 0x9a1F…c42B on ${P.net}`, () => { BAL[k] -= a; refreshAll(); }, `Sent ${fmt(a, dp(k))} ${k}`);
       };
       upd();
     };
 
     P.renderReceive = () => {
-      V('receive').innerHTML = `
-        <div class="hdr">${back}<h6>Receive</h6></div>
-        <div class="qr-box"><img src="assets/qr.png" alt="Wallet QR"><div class="addr">0x7325b1E9a04F7d2C83aA61f0E4b9D1c55E2d5fCd</div>
-          <button class="pbtn ghost r-copy">Copy address</button></div>
-        <p style="font-size:11px;color:#7d7795;text-align:center;margin-top:10px">Only send INFRA, Ethereum and BSC (EVM) assets to this address. TRON uses a separate address.</p>`;
-      $('.r-copy', host).onclick = () => { navigator.clipboard?.writeText('0x7325b1E9a04F7d2C83aA61f0E4b9D1c55E2d5fCd').catch(() => {}); toast('Address copied'); };
+      V('receive').innerHTML = `${hdr('Receive')}
+        <div class="card qr">
+          <div class="qr-net">${netImg(P.net)} ${esc(P.net)}</div>
+          <img src="assets/qr.png" alt="Wallet address QR">
+          <div class="addr">0x7325b1E9a04F7d2C83aA61f0E4b9D1c55E2d5fCd</div>
+          <div class="qr-acts"><button class="pbtn ghost r-copy">${I.copy} Copy</button><button class="pbtn ghost r-share">Share</button></div>
+        </div>
+        <p class="hint">Only send ${esc(P.net)}-compatible assets to this address.</p>`;
+      q('.r-copy').onclick = () => { navigator.clipboard?.writeText('0x7325b1E9a04F7d2C83aA61f0E4b9D1c55E2d5fCd').catch(() => {}); toast('Address copied'); };
+      q('.r-share').onclick = () => toast('Share sheet · demo');
     };
 
     P.renderSwap = () => {
+      const c = P.cfg, L = toks(), a0 = L.includes('USDT') ? 'USDT' : L[0], b0 = L.includes('ETH') && a0 !== 'ETH' ? 'ETH' : (L.find(k => k !== a0) || a0);
       V('swap').innerHTML = `
-        <div class="hdr">${back}<h6>Swap</h6></div>
-        <div class="box"><label>You pay</label>
-          <div class="amt-row"><input class="w-in" type="number" min="0" step="any" value="20"><span class="tsel"><select class="w-a">${tokOpts('INFRA')}</select>▾</span></div>
-          <div class="mini"><span class="w-bal"></span><span><button data-p=".5">50%</button><button data-p="1">Max</button></span></div></div>
-        <button class="flip" aria-label="Flip tokens">⇅</button>
-        <div class="box"><label>You receive</label>
-          <div class="amt-row"><input class="w-out" readonly><span class="tsel"><select class="w-b">${tokOpts('USDT')}</select>▾</span></div>
-          <div class="mini"><span class="w-bal2"></span></div></div>
-        <div class="kv">
-          <div><span>Provider</span><b>INFRA DEX</b></div>
-          <div><span>Price</span><b class="w-rate"></b></div>
-          <div><span>Fees</span><b>0.3% + gas</b></div>
-          <div><span>Price impact</span><b class="w-imp"></b></div>
-          <div><span>Min. received</span><b class="w-min"></b></div>
-          <div><span>Est. arrival</span><b>~3 sec</b></div>
+        <div class="hdr swap-h">${avatar()}${acct()}<button class="slipchip" aria-label="Slippage">${I.sliders}<span class="w-sl">${P.slip}%</span></button></div>
+        <div class="card pay">
+          <label class="lab">You pay</label>
+          <div class="amtrow"><input class="big w-in" type="number" min="0" step="any" value="200" aria-label="You pay"><label class="tpill"><span class="tp-a"></span><select class="w-a" aria-label="Pay token">${tokOpts(a0)}</select>${I.chev}</label></div>
+          <div class="brow"><span class="w-bal"></span><span><button class="chip" data-p=".5">50%</button><button class="chip" data-p="1">Max</button></span></div>
         </div>
-        <div style="font-size:10px;color:#7d7795">Slippage tolerance</div>
-        <div class="slip"><button data-s=".1">0.1%</button><button data-s=".5" class="on">0.5%</button><button data-s="1">1%</button><button data-s="3">3%</button></div>
-        <button class="pbtn w-go" style="margin-top:12px">Swap</button>`;
+        <button class="flipb" aria-label="Flip tokens">${I.flip}</button>
+        <div class="card pay">
+          <label class="lab">You receive</label>
+          <div class="amtrow"><input class="big w-out" readonly aria-label="You receive"><label class="tpill"><span class="tp-b"></span><select class="w-b" aria-label="Receive token">${tokOpts(b0)}</select>${I.chev}</label></div>
+          <div class="brow"><span class="w-bal2"></span></div>
+        </div>
+        <div class="card det">
+          <div data-hl="swap"><span>Provider ${I.info}</span><b class="prov">${esc(c.swap)}</b></div>
+          <div><span>Price ${I.info}</span><b class="w-rate"></b></div>
+          <div data-hl="fee"><span>Fees ${I.info}</span><b class="w-fee"></b></div>
+          <div><span>Min. received ${I.info}</span><b class="w-min"></b></div>
+          <div><span>Slippage ${I.info}</span><b class="w-sl">${P.slip}%</b></div>
+        </div>
+        <button class="pbtn w-go">Swap</button>`;
       const upd = () => {
-        const a = $('.w-a', host).value, b = $('.w-b', host).value, x = +$('.w-in', host).value || 0;
-        const rate = USD[a] / USD[b], imp = Math.min(x * USD[a] / 50000 * 100, 9.9), out = x * rate * (1 - .003) * (1 - imp / 100);
-        $('.w-out', host).value = out ? fmt(out, out < 1 ? 6 : 4) : '0';
-        $('.w-rate', host).textContent = `1 ${a} = ${fmt(rate, rate < 1 ? 6 : 4)} ${b}`;
-        $('.w-imp', host).textContent = fmt(imp) + '%'; $('.w-imp', host).className = 'w-imp' + (imp > 3 ? ' warn' : '');
-        $('.w-min', host).textContent = `${fmt(out * (1 - P.slip / 100), out < 1 ? 6 : 4)} ${b}`;
-        $('.w-bal', host).textContent = `Balance: ${fmt(TOK[a].bal, 4)}`;
-        $('.w-bal2', host).textContent = `Balance: ${fmt(TOK[b].bal, 4)}`;
-        const g = $('.w-go', host);
-        g.disabled = !x || x > TOK[a].bal || a === b;
-        g.textContent = a === b ? 'Select different tokens' : x > TOK[a].bal ? 'Insufficient balance' : `Swap ${a} → ${b}`;
+        const a = q('.w-a').value, b = q('.w-b').value, x = +q('.w-in').value || 0;
+        const rate = USD[a] / USD[b], fee = (c.fee + 0.25) / 100, out = x * rate * (1 - fee);
+        q('.tp-a').innerHTML = tokImg(a); q('.tp-b').innerHTML = tokImg(b);
+        q('.w-out').value = out ? fmt(out, dp(b)) : '0';
+        q('.w-rate').textContent = `1 ${a} = ${fmt(rate, rate < 0.01 ? 6 : 4)} ${b}`;
+        q('.w-fee').textContent = `${fmt(c.fee)}% + 0.25% LP`;
+        q('.w-min').textContent = `${fmt(out * (1 - P.slip / 100), dp(b))} ${b}`;
+        q('.w-bal').textContent = `Balance: ${fmt(BAL[a], dp(a))}`; q('.w-bal2').textContent = `Balance: ${fmt(BAL[b], dp(b))}`;
+        $$('.w-sl', V('swap')).forEach(e => e.textContent = P.slip + '%');
+        const g = q('.w-go'); g.disabled = !x || x > BAL[a] || a === b;
+        g.textContent = a === b ? 'Select different tokens' : x > BAL[a] ? 'Insufficient balance' : 'Swap';
         P._sw = { a, b, x, out };
       };
-      V('swap').addEventListener('input', upd);
-      V('swap').addEventListener('change', upd);
-      $$('[data-p]', V('swap')).forEach(btn => btn.onclick = () => { $('.w-in', host).value = +(TOK[$('.w-a', host).value].bal * +btn.dataset.p).toFixed(4); upd(); });
-      $$('[data-s]', V('swap')).forEach(btn => btn.onclick = () => { $$('[data-s]', V('swap')).forEach(z => z.classList.remove('on')); btn.classList.add('on'); P.slip = +btn.dataset.s; upd(); });
-      $('.flip', host).onclick = () => { const A = $('.w-a', host), B = $('.w-b', host), t = A.value; A.value = B.value; B.value = t; upd(); };
-      $('.w-go', host).onclick = () => {
-        const { a, b, x, out } = P._sw;
-        P.confirm(`Swap ${fmt(x, 4)} ${a}`, `for ≈ ${fmt(out, 4)} ${b}`, () => { TOK[a].bal -= x; TOK[b].bal += out; P.refresh(); }, 'Swap complete');
-      };
+      V('swap').addEventListener('input', upd); V('swap').addEventListener('change', upd);
+      $$('[data-p]', V('swap')).forEach(btn => btn.onclick = () => { q('.w-in').value = +(BAL[q('.w-a').value] * +btn.dataset.p).toFixed(4); upd(); });
+      q('.slipchip').onclick = () => { const s = [0.1, 0.5, 1, 3]; P.slip = s[(s.indexOf(P.slip) + 1) % s.length]; upd(); };
+      q('.flipb').onclick = () => { const A = q('.w-a'), B = q('.w-b'), t = A.value; A.value = B.value; B.value = t; upd(); };
+      q('.w-go').onclick = () => { const { a, b, x, out } = P._sw; P.confirm(`Swap ${fmt(x, dp(a))} ${a}`, `for ≈ ${fmt(out, dp(b))} ${b} via ${c.swap}`, () => { BAL[a] -= x; BAL[b] += out; refreshAll(); }, 'Swap complete'); };
       upd();
     };
 
     P.renderBridge = () => {
-      const nets = ['Ethereum', 'BNB Chain', 'TRON', 'INFRA', 'Arbitrum', 'Optimism', 'Base', 'Polygon', 'Avalanche'];
-      const opt = s => nets.map(n => `<option ${n === s ? 'selected' : ''}>${n}</option>`).join('');
-      V('bridge').innerHTML = `
-        <div class="hdr">${back}<h6>Cross-Chain Bridge</h6></div>
-        <div class="chain-sel">
-          <div class="chain"><small>From</small><select class="b-from">${opt('Ethereum')}</select></div>
-          <button class="swapc" aria-label="Switch">⇄</button>
-          <div class="chain"><small>To</small><select class="b-to">${opt('BNB Chain')}</select></div>
+      const c = P.cfg, N = c.nets;
+      const opt = s => N.map(n => `<option ${n === s ? 'selected' : ''}>${n}</option>`).join('');
+      const f0 = N.includes('TRON') ? 'TRON' : N[0], t0 = N.includes('BNB Chain') && f0 !== 'BNB Chain' ? 'BNB Chain' : (N.find(n => n !== f0) || N[0]);
+      V('bridge').innerHTML = `${hdr('Bridge')}
+        <div class="chains">
+          <label class="card ch"><span class="lab">From</span><span class="chv"><span class="cf-i"></span><select class="b-f" aria-label="From">${opt(f0)}</select>${I.chev}</span></label>
+          <button class="flipb h b-sw" aria-label="Switch">${I.swap}</button>
+          <label class="card ch"><span class="lab">To</span><span class="chv"><span class="ct-i"></span><select class="b-t" aria-label="To">${opt(t0)}</select>${I.chev}</span></label>
         </div>
-        <div class="box"><label>Amount</label><div class="amt-row"><input class="b-amt" type="number" min="0" step="any" value="100"><span class="tsel">USDT</span></div>
-          <div class="mini"><span>Balance: ${fmt(TOK.USDT.bal)} USDT</span></div></div>
-        <div class="kv"><div><span>You receive</span><b class="b-rcv"></b></div><div><span>Bridge fee</span><b>0.1%</b></div><div><span>Est. arrival</span><b class="b-eta"></b></div><div><span>Route</span><b class="b-route"></b></div></div>
-        <button class="pbtn b-go">Bridge assets</button>
-        <p style="font-size:10px;color:#7d7795;text-align:center;margin-top:10px">Any-to-any · multi-hop routes via INFRA</p>`;
+        <div class="card">
+          <label class="lab">Amount</label>
+          <div class="amtrow"><input class="big b-a" type="number" min="0" step="any" value="100" aria-label="Amount"><span class="tpill static">${tokImg('USDT')}USDT</span></div>
+          <div class="brow"><span>Balance: ${fmt(BAL.USDT)}</span></div>
+        </div>
+        <div class="card det">
+          <div data-hl="bridge"><span>Provider ${I.info}</span><b>${esc(c.bridge)}</b></div>
+          <div><span>Route</span><b class="b-r"></b></div>
+          <div data-hl="fee"><span>You receive</span><b class="b-rc"></b></div>
+          <div><span>Est. arrival</span><b class="b-e"></b></div>
+        </div>
+        <button class="pbtn b-go">Bridge</button>`;
       const upd = () => {
-        const f = $('.b-from', host).value, t = $('.b-to', host).value, a = +$('.b-amt', host).value || 0;
-        $('.b-rcv', host).textContent = `${fmt(a * .999)} USDT`;
-        $('.b-eta', host).textContent = ({ TRON: '~1 min', Ethereum: '~3 min', 'BNB Chain': '~45 sec', INFRA: '~10 sec' }[f] || '~30 sec');
-        $('.b-route', host).textContent = `${f} → ${t}`;
-        const g = $('.b-go', host); g.disabled = f === t || !a || a > TOK.USDT.bal;
-        g.textContent = f === t ? 'Choose different networks' : a > TOK.USDT.bal ? 'Insufficient balance' : 'Bridge assets';
+        const f = q('.b-f').value, t = q('.b-t').value, a = +q('.b-a').value || 0;
+        q('.cf-i').innerHTML = netImg(f); q('.ct-i').innerHTML = netImg(t);
+        q('.b-r').textContent = routeTxt(f, t);
+        q('.b-rc').textContent = `${fmt(a * (1 - 0.001 - c.fee / 100))} USDT`;
+        q('.b-e').textContent = eta(routeEta(f, t));
+        const g = q('.b-go'); g.disabled = f === t || !a || a > BAL.USDT;
+        g.textContent = f === t ? 'Choose different networks' : a > BAL.USDT ? 'Insufficient balance' : 'Bridge';
       };
       V('bridge').addEventListener('input', upd); V('bridge').addEventListener('change', upd);
-      $('.swapc', host).onclick = () => { const A = $('.b-from', host), B = $('.b-to', host), t = A.value; A.value = B.value; B.value = t; upd(); };
-      $('.b-go', host).onclick = () => P.confirm(`Bridge ${$('.b-amt', host).value} USDT`, `${$('.b-from', host).value} → ${$('.b-to', host).value}`, () => {}, 'Bridge submitted');
+      q('.b-sw').onclick = () => { const A = q('.b-f'), B = q('.b-t'), t = A.value; A.value = B.value; B.value = t; upd(); };
+      q('.b-go').onclick = () => P.confirm(`Bridge ${q('.b-a').value} USDT`, routeTxt(q('.b-f').value, q('.b-t').value), () => {}, 'Bridge submitted');
       upd();
     };
 
     P.renderRewards = () => {
-      const c = P.cash;
-      V('rewards').innerHTML = `
-        <div class="hdr">${back}<h6>reID Cashback</h6></div>
-        <div class="stats3"><div><b>${fmt(c.pending)}</b><span>Pending</span></div><div><b>${fmt(c.available)}</b><span>Available</span></div><div><b>${fmt(c.claimed)}</b><span>Claimed</span></div></div>
-        <div class="chart">${[30, 45, 28, 60, 52, 75, 90].map(h => `<i data-h="${h}"></i>`).join('')}</div>
-        <button class="pbtn c-go" ${c.available ? '' : 'disabled'}>${c.available ? `Claim ${fmt(c.available)} INFRA` : 'Nothing to claim'}</button>
-        <div class="secttl">History</div>
-        <div class="hist">
-          <div><span>reMarketplace purchase</span><span class="g">+4.20</span></div>
-          <div><span>Swap INFRA → USDT</span><span class="g">+0.60</span></div>
-          <div><span>Merchant payment · Dubai</span><span class="g">+2.40</span></div>
-          <div><span>reID verification bonus</span><span class="g">+10.00</span></div>
-        </div>`;
-      requestAnimationFrame(() => setTimeout(() => $$('.chart i', host).forEach(i => i.style.height = i.dataset.h + '%'), 60));
-      $('.c-go', host).onclick = () => P.confirm(`Claim ${fmt(c.available)} INFRA`, 'Cashback to your wallet', () => { TOK.INFRA.bal += c.available; c.claimed += c.available; c.available = 0; P.refresh(); }, 'Cashback claimed');
+      const c = P.cfg, k = P.cash;
+      V('rewards').innerHTML = `${hdr('Rewards')}` + (!c.cash ? `<div class="emptyst">${I.gift}<b>No cashback program</b><span>This wallet's operator hasn't enabled a cashback program.</span></div>` : `
+        <div class="cb-hero" data-hl="cash"><small>${esc(c.cashName)}</small><b>${fmt(c.cashRate, 1)}% back</b><span>on eligible payments &amp; swaps · paid in USDT</span></div>
+        <div class="stats3"><div><b>${fmt(k.pending)}</b><span>Pending</span></div><div><b>${fmt(k.available)}</b><span>Available</span></div><div><b>${fmt(k.claimed)}</b><span>Claimed</span></div></div>
+        <div class="card chartc"><div class="ch-h"><span class="lab">Last 7 days</span><b>+${fmt(k.available * .4)} USDT</b></div><div class="bars">${[30, 45, 28, 60, 52, 75, 90].map((h, i) => `<i data-h="${h}"><em>${'MTWTFSS'[i]}</em></i>`).join('')}</div></div>
+        <button class="pbtn c-go" ${k.available ? '' : 'disabled'}>${k.available ? `Claim ${fmt(k.available)} USDT` : 'Nothing to claim'}</button>
+        <label class="lab sec">History</label>
+        <div class="card list">
+          <div><span>${I.store}</span><p>Online purchase<small>Today</small></p><b class="up">+4.20</b></div>
+          <div><span>${I.swap}</span><p>Swap USDT → ETH<small>Yesterday</small></p><b class="up">+0.60</b></div>
+          <div><span>${I.pay}</span><p>${esc(c.merchantName)}<small>Mon</small></p><b class="up">+2.40</b></div>
+        </div>`);
+      if (c.cash) {
+        requestAnimationFrame(() => setTimeout(() => $$('.bars i', V('rewards')).forEach(i => i.style.height = i.dataset.h + '%'), 60));
+        q('.c-go').onclick = () => P.confirm(`Claim ${fmt(k.available)} USDT`, 'Cashback to your wallet', () => { BAL.USDT += k.available; k.claimed += k.available; k.available = 0; refreshAll(); }, 'Cashback claimed');
+      }
     };
 
     P.renderSettings = () => {
-      V('settings').innerHTML = `
-        <div class="hdr">${back}<h6>Security &amp; Networks</h6></div>
-        <div class="set">Face ID / Fingerprint<small>Approve transactions</small><span class="sw on"></span></div>
-        <div class="set">Passkeys<small>Phishing-resistant sign-in</small><span class="sw on"></span></div>
-        <div class="set">Transaction PIN<small>6-digit fallback</small><span class="sw on"></span></div>
-        <div class="set">Risk alerts<small>Suspicious address warnings</small><span class="sw on"></span></div>
-        <div class="set">Connect reID<small>Identity &amp; cashback</small><span class="sw on"></span></div>
-        <div class="secttl">Networks</div>
-        <div class="netlist">
-          <div class="netrow"><i style="background:#00e5ff"></i>INFRA<span>Live</span></div>
-          <div class="netrow"><i style="background:#627eea"></i>Ethereum<span>Live</span></div>
-          <div class="netrow"><i style="background:#f3ba2f"></i>BSC<span>Live</span></div>
-          <div class="netrow"><i style="background:#ff3b30"></i>TRON<span>Live</span></div>
+      const c = P.cfg;
+      const row = (t, s, on) => `<button class="setrow" data-sw="1"><span><b>${t}</b><small>${s}</small></span><i class="sw${on ? ' on' : ''}"></i></button>`;
+      V('settings').innerHTML = `${hdr('Settings')}
+        <label class="lab sec">Security</label>
+        <div class="card list0">
+          ${row('Face ID', 'Approve every transaction', true)}
+          ${row('Passkeys', 'Phishing-resistant sign-in', true)}
+          ${row('Transaction PIN', '6-digit fallback', true)}
+          ${row('Risk alerts', 'Warn on suspicious addresses', true)}
         </div>
-        <div class="secttl">Add custom network</div>
-        <div class="box"><label>Network name</label><input class="n-name" placeholder="My EVM Chain"></div>
-        <div class="box"><label>RPC URL</label><input class="n-rpc" placeholder="https://rpc.example.org"></div>
-        <div class="box"><label>Chain ID</label><input class="n-id" inputmode="numeric" placeholder="e.g. 8453"></div>
-        <button class="pbtn n-add">Add network</button>
-        <button class="pbtn ghost" data-go="receive">Back up recovery phrase</button>`;
-      $$('.sw', V('settings')).forEach(s => s.parentElement.onclick = () => { s.classList.toggle('on'); toast(s.parentElement.firstChild.textContent.trim() + (s.classList.contains('on') ? ' enabled' : ' disabled')); });
-      $('.n-add', host).onclick = () => {
-        const n = $('.n-name', host).value.trim(), r = $('.n-rpc', host).value.trim(), id = $('.n-id', host).value.trim();
+        <label class="lab sec">Compliance</label>
+        <div class="card list0" data-hl="compliance">
+          <div class="setrow"><span><b>Identity</b><small>${c.kyc ? 'reID verified · Level 2' : 'Not required'}</small></span><em class="tag ${c.kyc ? 'g' : ''}">${c.kyc ? 'Verified' : 'Off'}</em></div>
+          <div class="setrow"><span><b>Travel Rule</b><small>${c.travel ? 'Enabled above $1,000' : 'Disabled'}</small></span><em class="tag ${c.travel ? 'g' : ''}">${c.travel ? 'On' : 'Off'}</em></div>
+          <div class="setrow"><span><b>Sanctions screening</b><small>${c.screen ? 'All outgoing addresses' : 'Disabled'}</small></span><em class="tag ${c.screen ? 'g' : ''}">${c.screen ? 'On' : 'Off'}</em></div>
+          <div class="setrow"><span><b>Region</b><small>Jurisdiction profile</small></span><em class="tag">${esc(c.region)}</em></div>
+        </div>
+        <label class="lab sec">Networks</label>
+        <div class="card list0 netl" data-hl="nets">${c.nets.map(n => `<div class="setrow">${netImg(n)}<span><b>${n}</b></span><em class="tag g">Live</em></div>`).join('')}</div>
+        <label class="lab sec">Add custom network</label>
+        <div class="card form0">
+          <input class="n-name" placeholder="Network name" aria-label="Network name">
+          <input class="n-rpc" placeholder="RPC URL (https://…)" aria-label="RPC URL">
+          <input class="n-id" inputmode="numeric" placeholder="Chain ID" aria-label="Chain ID">
+          <button class="pbtn n-add">Add network</button>
+        </div>`;
+      $$('.setrow[data-sw]', V('settings')).forEach(r => r.onclick = () => { const s = $('.sw', r); s.classList.toggle('on'); toast(`${$('b', r).textContent} ${s.classList.contains('on') ? 'on' : 'off'}`); });
+      q('.n-add').onclick = () => {
+        const n = q('.n-name').value.trim(), r = q('.n-rpc').value.trim(), id = q('.n-id').value.trim();
         if (!n || !/^https?:\/\//.test(r) || !/^\d+$/.test(id)) return toast('Enter a name, valid RPC URL and numeric Chain ID');
-        $('.netlist', host).insertAdjacentHTML('beforeend', `<div class="netrow"><i style="background:var(--brand)"></i>${esc(n)} · ${esc(id)}<span>Custom</span></div>`);
-        $('.n-name', host).value = $('.n-rpc', host).value = $('.n-id', host).value = '';
-        toast(`${n} added`);
+        q('.netl').insertAdjacentHTML('beforeend', `<div class="setrow"><span class="tki sm"><img src="${circ('#555', esc(n.slice(0, 2).toUpperCase()))}" alt=""></span><span><b>${esc(n)}</b><small>Chain ID ${esc(id)}</small></span><em class="tag">Custom</em></div>`);
+        q('.n-name').value = q('.n-rpc').value = q('.n-id').value = ''; toast(`${n} added`);
       };
     };
 
+    P.renderPay = () => {
+      const c = P.cfg;
+      V('pay').innerHTML = `${hdr('Pay merchant')}
+        <div class="card merch" data-hl="merchant">
+          <div class="scanbox"><span class="scanln"></span>${I.scan}</div>
+          <b>${esc(c.merchantName)}</b><small>Verified merchant · reWallet Pay</small>
+          <div class="m-amt">42.50 <span>USDT</span></div>
+          ${c.cash ? `<em class="tag g">+${fmt(42.5 * c.cashRate / 100)} USDT cashback</em>` : ''}
+        </div>
+        <div class="card det">
+          <div><span>Network</span><b>${esc(P.net)}</b></div>
+          <div><span>Network fee</span><b>${fiat(NETS[P.net].gas)}</b></div>
+          <div><span>Merchant fee</span><b>Paid by merchant</b></div>
+        </div>
+        <button class="pbtn m-go">Pay 42.50 USDT</button>`;
+      q('.m-go').onclick = () => P.confirm('Pay 42.50 USDT', c.merchantName, () => { BAL.USDT -= 42.5; if (c.cash) P.cash.pending += 42.5 * c.cashRate / 100; refreshAll(); }, 'Payment complete');
+    };
+
     P.confirm = (title, sub, apply, doneMsg) => {
-      const ov = $('.overlay', host), sh = $('.sheet', host);
-      sh.innerHTML = `<div class="faceid scan">☺</div><h6>${esc(title)}</h6><p>${esc(sub)}</p><button class="pbtn ghost x">Cancel</button>`;
+      const ov = q('.overlay'), sh = q('.sheet');
+      sh.innerHTML = `<div class="fid scan">${I.face}</div><h6>${esc(title)}</h6><p>${esc(sub)}</p><button class="pbtn ghost x">Cancel</button>`;
       ov.classList.add('on');
-      let t = setTimeout(() => {
+      const t = setTimeout(() => {
         apply();
-        sh.innerHTML = `<div class="done">✓</div><h6>${esc(doneMsg)}</h6><p>Confirmed on-chain · demo</p><button class="pbtn x">Done</button>`;
+        sh.innerHTML = `<div class="fid ok">${I.check}</div><h6>${esc(doneMsg)}</h6><p>Confirmed · demo transaction</p><button class="pbtn x">Done</button>`;
         $('.x', sh).onclick = () => { ov.classList.remove('on'); P.go('home'); };
-      }, 1600);
+      }, 1500);
       $('.x', sh).onclick = () => { clearTimeout(t); ov.classList.remove('on'); };
     };
 
-    P.refresh = () => { P.renderHome(); P.renderRewards(); };
-    const renders = { home: P.renderHome, send: P.renderSend, receive: P.renderReceive, swap: P.renderSwap, bridge: P.renderBridge, rewards: P.renderRewards, settings: P.renderSettings };
-
-    P.go = v => {
+    const renders = { home: P.renderHome, send: P.renderSend, receive: P.renderReceive, swap: P.renderSwap, bridge: P.renderBridge, rewards: P.renderRewards, settings: P.renderSettings, pay: P.renderPay };
+    P.go = (v, force) => {
       if (!renders[v]) return;
-      if (v !== 'home') renders[v]();
+      if (v === 'pay' && !P.cfg.merchant) v = 'home';
+      if (v !== 'home' || force) renders[v]();
       $$('.view', host).forEach(el => { el.classList.toggle('on', el.dataset.v === v); el.classList.toggle('back', el.dataset.v === P.view && v !== P.view); });
       $$('.tabbar button', host).forEach(b => b.classList.toggle('on', b.dataset.go === v));
-      $(`[data-v="${v}"]`, host).scrollTop = 0;
+      V(v).scrollTop = 0;
       P.view = v;
       if (kind === 'demo') $$('.dm').forEach(b => b.classList.toggle('active', b.dataset.go === v));
     };
-
-    P.setBrand = (c, name) => {
-      if (c) { P.brand = c; host.style.setProperty('--brand', c); }
-      if (name != null) { P.name = name || 'reWallet'; $$('.wl-n', host).forEach(e => e.textContent = P.name); }
+    P.rerender = () => { P.renderHome(); if (P.view !== 'home') renders[P.view](); };
+    P.flash = key => {
+      const el = $(`.view.on [data-hl="${key}"]`, host); if (!el) return;
+      el.classList.remove('hl'); void el.offsetWidth; el.classList.add('hl');
+      const vw = el.closest('.view'), top = el.offsetTop - 60;
+      vw.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' });
     };
+    P.setBrand = col => host.style.setProperty('--act', col);
+    P.setTheme = k => { const t = THEMES[k]; if (!t) return; P.theme = k; Object.entries(t).forEach(([v, x]) => host.style.setProperty('--' + v, x)); host.dataset.theme = k; };
 
-    // delegated events
     host.addEventListener('click', e => {
       const g = e.target.closest('[data-go]');
       if (g) { e.preventDefault(); P.go(g.dataset.go); return; }
       const t = e.target.closest('[data-t]');
-      if (t) {
-        $$('[data-t]', host).forEach(b => b.classList.toggle('on', b === t));
-        $('.tlist', host).hidden = t.dataset.t !== 'tokens';
-        $('.nfts', host).hidden = t.dataset.t !== 'nfts';
-        return;
-      }
-      if (e.target.closest('.eye')) {
-        const bv = $('.bv', host); bv.dataset.h = bv.dataset.h ? '' : '1';
-        bv.textContent = bv.dataset.h ? '••••••' : fiatOf(totalUSD());
-        return;
-      }
+      if (t) { $$('[data-t]', host).forEach(b => b.classList.toggle('on', b === t)); $$('.tpane', host).forEach(p => p.hidden = p.dataset.p !== t.dataset.t); return; }
+      if (e.target.closest('.eye')) { P.hidden = !P.hidden; q('.bv').textContent = P.hidden ? '••••••' : fiat(total()); return; }
+      if (e.target.closest('[data-act=net]')) { const n = P.cfg.nets; P.net = n[(n.indexOf(P.net) + 1) % n.length]; P.renderHome(); toast(`Network: ${P.net}`); return; }
       const tk = e.target.closest('[data-tok]');
-      if (tk) { P.go('send'); $('.s-tok', host).value = tk.dataset.tok; V('send').dispatchEvent(new Event('input')); }
+      if (tk) { P.go('send'); q('.s-tok').value = tk.dataset.tok; V('send').dispatchEvent(new Event('input')); }
     });
 
     P.renderHome();
     phones.push(P);
     return P;
   }
-
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const refreshAll = () => phones.forEach(p => p.rerender());
 
   /* ---------- toast ---------- */
   let tt;
@@ -323,48 +435,126 @@
   const heroP = createPhone($('[data-phone="hero"]'), 'hero');
   const demoP = createPhone($('[data-phone="demo"]'), 'demo');
   const wlP = createPhone($('[data-phone="wl"]'), 'wl');
+  [heroP, demoP].forEach(p => p.setTheme('classic'));
+  wlP.setTheme('violet');
 
-  // demo menu
   $$('.dm').forEach(b => b.onclick = () => { demoP.go(b.dataset.go); if (innerWidth < 900) $('.demo-phone').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); });
 
-  // currency switchers
-  const reRenderAll = () => phones.forEach(p => { p.renderHome(); if (p.view !== 'home') p.go(p.view); });
-  $$('#fiatSeg button').forEach(b => b.onclick = () => { $$('#fiatSeg button').forEach(x => x.classList.remove('on')); b.classList.add('on'); state.fiat = b.dataset.fiat; reRenderAll(); demoP.go('home'); });
-  $$('#cryptoSeg button').forEach(b => b.onclick = () => { $$('#cryptoSeg button').forEach(x => x.classList.remove('on')); b.classList.add('on'); state.crypto = b.dataset.crypto; reRenderAll(); demoP.go('home'); });
+  const segPick = (sel, fn) => $$(sel + ' button').forEach(b => b.onclick = () => { $$(sel + ' button').forEach(x => x.classList.toggle('on', x === b)); fn(b); });
+  segPick('#fiatSeg', b => { state.fiat = b.dataset.fiat; refreshAll(); demoP.go('home'); });
+  segPick('#cryptoSeg', b => { state.crypto = b.dataset.crypto; refreshAll(); demoP.go('home'); });
 
-  // white-label
-  const setSw = c => { wlP.setBrand(c); $('#wlColor').value = c; };
-  $$('#swatches button').forEach(b => b.onclick = () => { $$('#swatches button').forEach(x => x.classList.remove('on')); b.classList.add('on'); setSw(getComputedStyle(b).getPropertyValue('--s').trim()); });
-  $('#wlColor').oninput = e => { $$('#swatches button').forEach(x => x.classList.remove('on')); wlP.setBrand(e.target.value); };
-  $('#wlName').oninput = e => wlP.setBrand(null, e.target.value.trim());
-  $$('#wlChips span').forEach(s => s.onclick = () => s.classList.toggle('on'));
-
-  // hero phone: gentle auto tour until user interacts
-  let tour = ['home', 'swap', 'rewards', 'home'], ti = 0, tourOn = !reduce;
-  const tourT = setInterval(() => { if (!tourOn) return clearInterval(tourT); ti = (ti + 1) % tour.length; heroP.go(tour[ti]); }, 3800);
+  // hero phone auto tour
+  const tour = ['home', 'swap', 'bridge', 'rewards', 'home']; let ti = 0, tourOn = !reduce;
+  const tourT = setInterval(() => { if (!tourOn) return clearInterval(tourT); ti = (ti + 1) % tour.length; heroP.go(tour[ti]); }, 3600);
   heroP.host.addEventListener('pointerdown', () => tourOn = false, { once: true });
 
-  /* ---------- 3D tilt ---------- */
+  /* ---------- white-label configurator ---------- */
+  (() => {
+    const box = $('#wlcfg'); if (!box) return;
+    const cap = $('#wlNow'), C = wlP.cfg;
+    const apply = (screen, key, label) => {
+      wlP.rerender();
+      if (screen && wlP.view !== screen) wlP.go(screen);
+      setTimeout(() => wlP.flash(key), 380);
+      if (cap && label) { cap.innerHTML = `<b>Now showing:</b> ${label}`; cap.classList.remove('ping'); void cap.offsetWidth; cap.classList.add('ping'); }
+    };
+    $$('.wl-tabs button', box).forEach(b => b.onclick = () => {
+      $$('.wl-tabs button', box).forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
+      $$('.wl-pane', box).forEach(p => p.hidden = p.id !== b.getAttribute('aria-controls'));
+    });
+    $$('.thc', box).forEach(b => b.onclick = () => {
+      $$('.thc', box).forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
+      wlP.setTheme(b.dataset.theme); const col = THEMES[b.dataset.theme].act;
+      $('#wlColor').value = col; $$('#swatches button').forEach(x => x.classList.toggle('on', getComputedStyle(x).getPropertyValue('--s').trim() === col));
+      wlP.go('home'); apply('home', 'brand', `${$('b', b).textContent} theme`);
+    });
+    $$('[data-logo]', box).forEach(b => b.onclick = () => {
+      $$('[data-logo]', box).forEach(x => x.classList.toggle('on', x === b)); $('#wlUpBtn').classList.remove('on');
+      C.logo = b.dataset.logo; apply('home', 'brand', 'Company logo in the wallet header');
+    });
+    $('#wlUpload').onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      if (!/^image\//.test(f.type) || f.size > 1.5e6) return toast('Please choose an image under 1.5 MB');
+      const r = new FileReader();
+      r.onload = () => { C.logoData = r.result; C.logo = 'upload'; $$('[data-logo]', box).forEach(x => x.classList.remove('on')); $('#wlUpBtn').classList.add('on'); apply('home', 'brand', 'Your uploaded logo in the wallet header'); };
+      r.readAsDataURL(f);
+    };
+    $('#wlName').oninput = e => { C.name = e.target.value.trim() || 'reWallet'; apply('home', 'brand', 'App name in the wallet header'); };
+    const setCol = c => { wlP.setBrand(c); $('#wlColor').value = c; apply('home', 'brand', 'Brand colour on buttons, actions and highlights'); };
+    $$('#swatches button').forEach(b => b.onclick = () => { $$('#swatches button').forEach(x => x.classList.toggle('on', x === b)); setCol(getComputedStyle(b).getPropertyValue('--s').trim()); });
+    $('#wlColor').oninput = e => { $$('#swatches button').forEach(x => x.classList.remove('on')); setCol(e.target.value); };
+    const chipSet = (sel, key, screen, hl, label, min) => $$(sel + ' button', box).forEach(b => {
+      b.classList.toggle('on', C[key].includes(b.dataset.v)); b.setAttribute('aria-pressed', b.classList.contains('on'));
+      b.onclick = () => {
+        const v = b.dataset.v, on = C[key].includes(v);
+        if (on && C[key].length <= min) return toast(`Keep at least ${min} enabled`);
+        C[key] = on ? C[key].filter(x => x !== v) : [...C[key], v];
+        b.classList.toggle('on', !on); b.setAttribute('aria-pressed', !on);
+        apply(screen, hl, label);
+      };
+    });
+    const initChips = () => {
+      chipSet('#wlNets', 'nets', 'settings', 'nets', 'Supported networks in Settings, network switcher and Bridge', 2);
+      chipSet('#wlToks', 'tokens', 'home', 'tokens', 'Default tokens in the wallet token list', 2);
+    };
+    initChips();
+    const radio = (sel, key, screen, hl, label) => $$(sel + ' button', box).forEach(b => b.onclick = () => {
+      $$(sel + ' button', box).forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); });
+      C[key] = b.dataset.v; apply(screen, hl, label);
+    });
+    radio('#wlSwap', 'swap', 'swap', 'swap', 'Swap provider on the Swap screen');
+    radio('#wlBridge', 'bridge', 'bridge', 'bridge', 'Bridge provider on the Bridge screen');
+    const fee = $('#wlFee'), feeV = $('#wlFeeV');
+    fee.oninput = () => { C.fee = +fee.value; feeV.textContent = fmt(C.fee) + '%'; apply('swap', 'fee', 'Platform fee on Swap (also applied on Send & Bridge)'); };
+    const sw = (id, key, screen, hl, label, dep) => { const el = $(id); el.checked = !!C[key]; el.onchange = () => { C[key] = el.checked; if (dep) $$(dep).forEach(d => d.disabled = !el.checked); apply(el.checked || key !== 'merchant' ? screen : 'home', hl, label + (el.checked ? ' — on' : ' — off')); }; };
+    sw('#wlCash', 'cash', 'rewards', 'cash', 'Cashback program on Home and Rewards', '#wlCashName,#wlCashRate');
+    sw('#wlMerch', 'merchant', 'pay', 'merchant', 'Merchant “Pay” action and checkout', '#wlMerchName');
+    sw('#wlKyc', 'kyc', 'home', 'kyc', 'reID verification badge on Home');
+    sw('#wlScreen', 'screen', 'send', 'screen', 'Sanctions screening on Send');
+    sw('#wlTravel', 'travel', 'settings', 'compliance', 'Travel Rule status in Settings');
+    $('#wlCashName').oninput = e => { C.cashName = e.target.value.trim() || 'Cashback'; apply('rewards', 'cash', 'Cashback program name'); };
+    const cr = $('#wlCashRate'), crV = $('#wlCashRateV');
+    cr.oninput = () => { C.cashRate = +cr.value; crV.textContent = fmt(C.cashRate, 1) + '%'; apply('rewards', 'cash', 'Cashback rate on Rewards'); };
+    $('#wlMerchName').oninput = e => { C.merchantName = e.target.value.trim() || 'Merchant'; apply('pay', 'merchant', 'Merchant name at checkout'); };
+    $('#wlRegion').onchange = e => { C.region = e.target.value; apply('settings', 'compliance', 'Region profile in Settings'); };
+    $('#wlReset').onclick = () => {
+      Object.assign(C, { ...DEFAULT, nets: [...DEFAULT.nets], tokens: [...DEFAULT.tokens] }); delete C.logoData;
+      wlP.setTheme('violet'); $$('.thc', box).forEach(x => { x.classList.toggle('on', x.dataset.theme === 'violet'); x.setAttribute('aria-pressed', x.dataset.theme === 'violet'); });
+      $('#wlName').value = C.name; fee.value = C.fee; feeV.textContent = fmt(C.fee) + '%'; cr.value = C.cashRate; crV.textContent = fmt(C.cashRate, 1) + '%';
+      $('#wlCashName').value = C.cashName; $('#wlMerchName').value = C.merchantName; $('#wlRegion').value = C.region; $('#wlUpload').value = '';
+      ['#wlCash', '#wlMerch', '#wlKyc', '#wlScreen', '#wlTravel'].forEach(id => $(id).checked = true);
+      $$('#wlCashName,#wlCashRate,#wlMerchName').forEach(d => d.disabled = false);
+      $$('[data-logo]', box).forEach((x, i) => x.classList.toggle('on', i === 0)); $('#wlUpBtn').classList.remove('on');
+      $$('#swatches button').forEach((x, i) => x.classList.toggle('on', i === 0)); $('#wlColor').value = '#7000ff';
+      $$('#wlSwap button', box).forEach(x => x.classList.toggle('on', x.dataset.v === C.swap));
+      $$('#wlBridge button', box).forEach(x => x.classList.toggle('on', x.dataset.v === C.bridge));
+      initChips(); wlP.go('home', true); cap.innerHTML = '<b>Now showing:</b> Home screen';
+    };
+  })();
+
+  /* ---------- 3D tilt + cursor glow + hero parallax ---------- */
   if (matchMedia('(hover:hover)').matches && !reduce) {
     $$('.tilt').forEach(el => {
       const par = el.parentElement;
       par.addEventListener('pointermove', e => {
         const r = par.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-        el.style.transform = `rotateY(${x * 14}deg) rotateX(${-y * 14}deg)`;
+        el.style.transform = `rotateY(${x * 10}deg) rotateX(${-y * 10}deg)`;
       });
       par.addEventListener('pointerleave', () => el.style.transform = '');
     });
     const glow = $('.cursor-glow');
     addEventListener('pointermove', e => { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; }, { passive: true });
+    const hero = $('.hero');
+    hero.addEventListener('pointermove', e => {
+      hero.style.setProperty('--px', (e.clientX / innerWidth - .5).toFixed(3));
+      hero.style.setProperty('--py', (e.clientY / innerHeight - .5).toFixed(3));
+    });
   }
 
   /* ---------- theme ---------- */
   const root = document.documentElement, tBtn = $('#themeT'), meta = $('meta[name=theme-color]');
-  const applyTheme = t => {
-    root.dataset.theme = t;
-    meta.content = t === 'dark' ? '#0b0716' : '#fbfaff';
-    tBtn.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-  };
+  const applyTheme = t => { root.dataset.theme = t; meta.content = t === 'dark' ? '#0b0716' : '#fbfaff'; tBtn.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'); };
   applyTheme(root.dataset.theme || 'light');
   tBtn.onclick = () => {
     root.classList.add('theming');
@@ -378,11 +568,10 @@
   addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20), { passive: true });
   burger.onclick = () => { const o = links.classList.toggle('open'); burger.setAttribute('aria-expanded', o); };
   $$('#links a').forEach(a => a.onclick = () => { links.classList.remove('open'); burger.setAttribute('aria-expanded', false); });
-  const secs = $$('main section[id]');
   const spy = new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) $$('#links a').forEach(a => a.classList.toggle('act', a.getAttribute('href') === '#' + e.target.id));
   }), { rootMargin: '-45% 0px -50% 0px' });
-  secs.forEach(s => spy.observe(s));
+  $$('main section[id]').forEach(s => spy.observe(s));
 
   /* ---------- reveal + counters ---------- */
   const io = new IntersectionObserver(es => es.forEach(e => {
@@ -398,35 +587,48 @@
 
   /* ---------- network orbit ---------- */
   const orbit = $('#orbit');
-  const live = [['INFRA', '#00e5ff'], ['Ethereum', '#8b7cff'], ['BSC', '#f3ba2f'], ['TRON', '#ff3b30']];
+  const live = [['Ethereum', '#8b7cff'], ['BSC', '#f3ba2f'], ['TRON', '#ff3b30']];
   const soon = ['Polygon', 'Avalanche', 'Arbitrum', 'Optimism', 'Base', 'Solana', 'Bitcoin'];
   const orbs = [];
   live.forEach(([n, c], i) => { const d = document.createElement('div'); d.className = 'orb live'; d.style.setProperty('--c', c); d.textContent = n; orbit.appendChild(d); orbs.push({ d, r: .41, a: i / live.length * Math.PI * 2, s: .00025 }); });
   soon.forEach((n, i) => { const d = document.createElement('div'); d.className = 'orb soon'; d.textContent = n; orbit.appendChild(d); orbs.push({ d, r: .25, a: i / soon.length * Math.PI * 2, s: -.0004 }); });
-  let last = performance.now();
+  let last = performance.now(), orbVis = true;
+  new IntersectionObserver(([e]) => orbVis = e.isIntersecting).observe(orbit);
   const spinOrbs = t => {
     const dt = reduce ? 0 : t - last; last = t;
-    const R = orbit.clientWidth;
-    orbs.forEach(o => { o.a += o.s * dt; o.d.style.transform = `translate(${Math.cos(o.a) * o.r * R}px,${Math.sin(o.a) * o.r * R}px)`; });
+    if (orbVis) { const R = orbit.clientWidth; orbs.forEach(o => { o.a += o.s * dt; o.d.style.transform = `translate(${Math.cos(o.a) * o.r * R}px,${Math.sin(o.a) * o.r * R}px)`; }); }
     requestAnimationFrame(spinOrbs);
   };
   requestAnimationFrame(spinOrbs);
 
-  /* ---------- hero particles ---------- */
+  /* ---------- hero network canvas (nodes + travelling packets) ---------- */
   const cv = $('#particles');
   if (cv && !reduce) {
-    const ctx = cv.getContext('2d'); let W, H, pts = []; const dark = () => document.documentElement.dataset.theme === 'dark';
-    const size = () => { const dpr = Math.min(devicePixelRatio || 1, 2); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      pts = Array.from({ length: Math.round(W * H / 22000) }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25 })); };
+    const ctx = cv.getContext('2d'); let W, H, pts = [], pk = [];
+    const dark = () => root.dataset.theme === 'dark';
+    const size = () => {
+      const dpr = Math.min(devicePixelRatio || 1, 2); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      pts = Array.from({ length: Math.max(24, Math.min(90, Math.round(W * H / 16000))) }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .2, vy: (Math.random() - .5) * .2, r: Math.random() * 1.6 + .8 }));
+    };
     size(); addEventListener('resize', size);
     let vis = true; new IntersectionObserver(([e]) => vis = e.isIntersecting).observe(cv);
+    const cols = ['0,229,255', '155,92,255', '46,229,157'];
     const draw = () => {
       if (vis) {
-        ctx.clearRect(0, 0, W, H);
-        for (const p of pts) { p.x = (p.x + p.vx + W) % W; p.y = (p.y + p.vy + H) % H; ctx.fillStyle = dark() ? 'rgba(201,176,255,.6)' : 'rgba(112,0,255,.35)'; ctx.fillRect(p.x, p.y, 1.6, 1.6); }
+        const dk = dark(), links2 = []; ctx.clearRect(0, 0, W, H);
+        for (const p of pts) { p.x = (p.x + p.vx + W) % W; p.y = (p.y + p.vy + H) % H; }
         for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
           const a = pts[i], b = pts[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-          if (d < 120) { ctx.strokeStyle = `rgba(${dark() ? '155,92,255' : '112,0,255'},${(1 - d / 120) * (dark() ? .22 : .14)})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+          if (d < 150) { links2.push([a, b]); ctx.strokeStyle = `rgba(${dk ? '155,92,255' : '112,0,255'},${(1 - d / 150) * (dk ? .25 : .14)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+        }
+        ctx.fillStyle = dk ? 'rgba(201,176,255,.75)' : 'rgba(112,0,255,.45)';
+        for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.3); ctx.fill(); }
+        if (links2.length && pk.length < 16 && Math.random() < .14) { const [a, b] = links2[(Math.random() * links2.length) | 0]; pk.push({ a, b, t: 0, c: cols[(Math.random() * 3) | 0], s: .008 + Math.random() * .012 }); }
+        pk = pk.filter(k => (k.t += k.s) < 1);
+        for (const k of pk) {
+          const x = k.a.x + (k.b.x - k.a.x) * k.t, y = k.a.y + (k.b.y - k.a.y) * k.t;
+          const g = ctx.createRadialGradient(x, y, 0, x, y, 10); g.addColorStop(0, `rgba(${k.c},.95)`); g.addColorStop(1, `rgba(${k.c},0)`);
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 10, 0, 6.3); ctx.fill();
         }
       }
       requestAnimationFrame(draw);
@@ -434,9 +636,47 @@
     draw();
   }
 
+  /* ---------- mock bridge section ---------- */
+  (() => {
+    const xb = $('#xb'); if (!xb) return;
+    const XBAL = { USDT: 1250, USDC: 640, ETH: 0.85, BNB: 3.2 };
+    const F = $('#xbFrom'), T = $('#xbTo'), A = $('#xbAmt'), K = $('#xbTok'), go = $('#xbGo');
+    let busy = false;
+    const upd = () => {
+      const f = F.value, t = T.value, a = +A.value || 0, k = K.value;
+      $$('[data-ic=from]', xb).forEach(i => i.src = NETS[f].img);
+      $$('[data-ic=to]', xb).forEach(i => i.src = NETS[t].img);
+      $('#xbL1').textContent = f; $('#xbL2').textContent = t;
+      $('#xbRoute').textContent = routeTxt(f, t);
+      $('#xbHub').textContent = isHop(f, t) ? 'Multi-hop route' : 'Direct route';
+      $('#xbBal').textContent = `${fmt(XBAL[k], k === 'ETH' || k === 'BNB' ? 4 : 2)} ${k}`;
+      $('#xbRcv').textContent = `${fmt(a * .999, a < 10 ? 4 : 2)} ${k}`;
+      $('#xbFee').textContent = `0.1% (${fmt(a * .001, 4)} ${k})`;
+      $('#xbGas').textContent = '≈ $' + fmt(routeGas(f, t), 3);
+      $('#xbEta').textContent = eta(routeEta(f, t));
+      const bad = f === t ? 'Choose different networks' : !a ? 'Enter an amount' : a > XBAL[k] ? 'Insufficient balance' : '';
+      if (!busy) { go.disabled = !!bad; go.firstChild.textContent = bad || `Bridge ${k} to ${t} `; }
+    };
+    [F, T, A, K].forEach(e => e.addEventListener('input', upd));
+    $('#xbSwap').onclick = () => { const v = F.value; F.value = T.value; T.value = v; upd(); };
+    go.onclick = () => {
+      if (busy) return; busy = true; go.disabled = true; go.firstChild.textContent = 'Bridging… ';
+      const li = $$('#xbSteps li'); li.forEach(l => l.className = ''); $$('.xb-node', xb).forEach(n => n.classList.remove('lit'));
+      xb.classList.add('run'); $('#xbN1').classList.add('lit');
+      let i = 0;
+      const next = () => {
+        if (i) li[i - 1].className = 'ok';
+        if (i === li.length) { xb.classList.remove('run'); $('#xbN2').classList.add('lit'); const a = +A.value, k = K.value; XBAL[k] -= a; busy = false; toast(`Bridged ${fmt(a * .999, 2)} ${k} to ${T.value} · demo`); upd(); return; }
+        li[i].className = 'act'; i++; setTimeout(next, 1100);
+      };
+      next();
+    };
+    upd();
+  })();
+
   /* ---------- contact form ---------- */
   // Set CONTACT_ENDPOINT to a form backend (e.g. Formspree/your API) to POST JSON.
-  // If left empty, the form opens the user's email client addressed to CONTACT_EMAIL.
+  // If empty, the form opens the visitor's email client addressed to CONTACT_EMAIL.
   const CONTACT_ENDPOINT = '';
   const CONTACT_EMAIL = 'info@rewallet.online';
   const form = $('#contactForm'), msg = $('#formMsg');
@@ -455,8 +695,7 @@
       if (CONTACT_ENDPOINT) {
         const r = await fetch(CONTACT_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(data) });
         if (!r.ok) throw new Error();
-        msg.className = 'form-msg ok'; msg.textContent = 'Thanks! Your message has been sent — we\'ll be in touch shortly.';
-        form.reset();
+        msg.className = 'form-msg ok'; msg.textContent = 'Thanks! Your message has been sent — we\'ll be in touch shortly.'; form.reset();
       } else {
         const body = `Name: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company || '-'}\nPhone: ${data.phone || '-'}\nType: ${data.type}\n\n${data.message}`;
         location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('reWallet — ' + data.type)}&body=${encodeURIComponent(body)}`;
@@ -466,57 +705,6 @@
     btn.disabled = false;
   });
   $$('#contactForm input, #contactForm textarea').forEach(el => el.addEventListener('input', () => el.parentElement.classList.remove('err')));
-
-  /* ---------- mock bridge ---------- */
-  (() => {
-    const COL = { Ethereum: '#627eea', 'BNB Chain': '#f3ba2f', TRON: '#ff3b30', INFRA: '#7000ff', Arbitrum: '#28a0f0', Optimism: '#ff0420', Base: '#0052ff', Polygon: '#8247e5', Avalanche: '#e84142' };
-    const IC = { TRON: 'assets/tron.png', 'BNB Chain': 'assets/bnb.png', INFRA: 'assets/icon.png' };
-    const icOf = n => IC[n] || 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="${COL[n]}"/><text x="16" y="21" font-family="Arial" font-weight="700" font-size="13" fill="#fff" text-anchor="middle">${n.slice(0, 2)}</text></svg>`);
-    const ETA = { TRON: 60, Ethereum: 180, 'BNB Chain': 45, INFRA: 8, Arbitrum: 30, Optimism: 30, Base: 25, Polygon: 60, Avalanche: 20 };
-    const GAS = { TRON: 0.9, Ethereum: 2.4, 'BNB Chain': 0.12, INFRA: 0.001, Arbitrum: 0.05, Optimism: 0.04, Base: 0.02, Polygon: 0.01, Avalanche: 0.08 };
-    const NONEVM = ['TRON'];
-    const route = (f, t) => (NONEVM.includes(f) || NONEVM.includes(t)) && f !== 'INFRA' && t !== 'INFRA' ? [f, 'INFRA', t] : [f, t];
-    const eta = s => s < 60 ? `~${s} sec` : `~${Math.round(s / 60)} min`;
-    const BAL = { USDT: 1250, USDC: 640, ETH: 0.85, BNB: 3.2 };
-    const xb = $('#xb'); if (!xb) return;
-    const F = $('#xbFrom'), T = $('#xbTo'), A = $('#xbAmt'), K = $('#xbTok'), go = $('#xbGo');
-    let busy = false;
-    const upd = () => {
-      const f = F.value, t = T.value, a = +A.value || 0, k = K.value;
-      $$('[data-ic=from]', xb).forEach(i => i.src = icOf(f));
-      $$('[data-ic=to]', xb).forEach(i => i.src = icOf(t));
-      const r = route(f, t);
-      $('#xbRoute').textContent = r.join(' → ');
-      $('#xbHub').textContent = r.length > 2 ? 'Multi-hop via INFRA' : 'Direct route';
-      $('#xbL1').textContent = f; $('#xbL2').textContent = t;
-      $('#xbBal').textContent = `${fmt(BAL[k], k === 'ETH' || k === 'BNB' ? 4 : 2)} ${k}`;
-      $('#xbRcv').textContent = `${fmt(a * .999, a < 10 ? 4 : 2)} ${k}`;
-      $('#xbFee').textContent = `0.1% (${fmt(a * .001, 4)} ${k})`;
-      $('#xbGas').textContent = '≈ $' + fmt(r.reduce((s, n, i) => i < r.length - 1 ? s + GAS[n] : s, 0), 3);
-      $('#xbEta').textContent = eta(r.slice(0, -1).reduce((s, n) => s + ETA[n], 0) + (r.length > 2 ? 8 : 0));
-      const bad = f === t ? 'Choose different networks' : !a ? 'Enter an amount' : a > BAL[k] ? 'Insufficient balance' : '';
-      if (!busy) { go.disabled = !!bad; go.firstChild.textContent = bad || `Bridge ${k} to ${t} `; }
-    };
-    [F, T, A, K].forEach(e => e.addEventListener('input', upd));
-    $('#xbSwap').onclick = () => { const v = F.value; F.value = T.value; T.value = v; upd(); };
-    go.onclick = () => {
-      if (busy) return; busy = true; go.disabled = true; go.firstChild.textContent = 'Bridging… ';
-      const li = $$('#xbSteps li'); li.forEach(l => l.className = ''); $$('.xb-node', xb).forEach(n => n.classList.remove('lit'));
-      xb.classList.add('run'); $('#xbN1').classList.add('lit');
-      let i = 0;
-      const next = () => {
-        if (i) li[i - 1].className = 'ok';
-        if (i === li.length) {
-          xb.classList.remove('run'); $('#xbN2').classList.add('lit');
-          const a = +A.value, k = K.value; BAL[k] -= a;
-          busy = false; toast(`Bridged ${fmt(a * .999, 2)} ${k} to ${T.value} · demo`); upd(); return;
-        }
-        li[i].className = 'act'; i++; setTimeout(next, 1100);
-      };
-      next();
-    };
-    upd();
-  })();
 
   $('#yr').textContent = new Date().getFullYear();
 })();
