@@ -5,17 +5,17 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- demo data ---------- */
-  const USD = { reAED: 0.2723, USDT: 1, USDC: 1, ETH: 3200, BNB: 600, INFRA: 0.05 };
-  const FIAT = { AED: [3.6725, 'AED'], USD: [1, '$'], EUR: [0.92, '€'], GBP: [0.79, '£'], INR: [83.5, '₹'], SAR: [3.75, 'SAR'] };
+  const USD = { INFRA: 0.05, USDT: 1, USDC: 1, ETH: 3200, BNB: 600, TRX: 0.16 };
+  const FIAT = { USD: [1, '$'], EUR: [0.92, '€'], GBP: [0.79, '£'], INR: [83.5, '₹'], SAR: [3.75, 'SAR'] };
   const TOK = {
-    reAED: { bal: 2450, net: 'INFRA', col: '#7000ff', ic: 'assets/icon.png', chg: 0 },
+    INFRA: { bal: 12000, net: 'INFRA Network', col: '#f1e9ff', ic: 'assets/icon.png', chg: 5.1 },
     USDT: { bal: 320, net: 'TRC20', col: '#26a17b', ic: 'assets/usdt.png', chg: 0.01 },
     USDC: { bal: 50, net: 'ERC20', col: '#2775ca', chg: 0 },
     ETH: { bal: 0.12, net: 'Ethereum', col: '#627eea', chg: 2.4 },
     BNB: { bal: 0.5, net: 'BSC', col: '#f3ba2f', ic: 'assets/bnb.png', chg: -0.8 },
-    INFRA: { bal: 1200, net: 'INFRA', col: '#00b8d4', chg: 5.1 },
+    TRX: { bal: 900, net: 'TRON', col: '#ff3b30', ic: 'assets/tron.png', chg: 1.2 },
   };
-  const state = { fiat: 'AED', crypto: 'reAED' };
+  const state = { fiat: 'USD', crypto: 'USDT' };
   const phones = [];
 
   const fmt = (n, d = 2) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -34,7 +34,7 @@
 
   /* ---------- phone factory ---------- */
   function createPhone(host, kind) {
-    const P = { host, kind, view: 'home', brand: '#7000ff', name: 'reWallet', slip: 0.5 };
+    const P = { host, kind, view: 'home', brand: '#7000ff', name: 'reWallet', slip: 0.5, cash: { pending: 62, available: 184, claimed: 1427.5 } };
     host.innerHTML = `
       <div class="screen">
         <div class="notch"></div>
@@ -65,7 +65,7 @@
       const cr = state.crypto;
       V('home').innerHTML = `
         <div class="top">
-          ${kind === 'wl' ? `<div class="wl-logo"><i></i><span class="wl-n">${esc(P.name)}</span></div>` : `<div class="net-sel"><i></i>INFRA · ${state.fiat} ▾</div>`}
+          ${kind === 'wl' ? `<div class="wl-logo"><i></i><span class="wl-n">${esc(P.name)}</span></div>` : `<div class="net-sel"><i></i>INFRA Network ▾</div>`}
           <div class="acct">Account 1 ▾<br><b>0x7325…5fCd</b></div>
         </div>
         <div class="bal"><small>Total balance</small>
@@ -79,7 +79,7 @@
           <button data-go="swap"><span>⇄</span>Swap</button>
           <button data-go="bridge"><span>⛓</span>Bridge</button>
         </div>
-        <div class="cashback-banner" data-go="rewards"><div>reID Cashback available<b>${fmt(18.4)} reAED</b></div><span>Claim →</span></div>
+        <div class="cashback-banner" data-go="rewards"><div>reID Cashback available<b>${fmt(P.cash.available)} INFRA</b></div><span>Claim →</span></div>
         <div class="seg-t"><button class="on" data-t="tokens">Tokens</button><button data-t="nfts">NFTs</button></div>
         <div class="tlist">${Object.entries(TOK).map(([k, t]) => `
           <div class="tok" data-tok="${k}">
@@ -102,10 +102,10 @@
         <div class="hdr">${back}<h6>Send</h6></div>
         <div class="box"><label>Recipient</label><input class="s-to" placeholder="0x… or ENS / reID handle" value="0x9a1F…c42B"></div>
         <div class="box"><label>Amount</label>
-          <div class="amt-row"><input class="s-amt" type="number" min="0" step="any" value="25"><span class="tsel"><select class="s-tok">${tokOpts('reAED')}</select>▾</span></div>
+          <div class="amt-row"><input class="s-amt" type="number" min="0" step="any" value="25"><span class="tsel"><select class="s-tok">${tokOpts('INFRA')}</select>▾</span></div>
           <div class="mini"><span class="s-bal"></span><span><button class="s-max">MAX</button></span></div>
         </div>
-        <div class="kv"><div><span>Network</span><b class="s-net"></b></div><div><span>Network fee</span><b>~0.01 reAED</b></div><div><span>Fiat value</span><b class="s-fv"></b></div></div>
+        <div class="kv"><div><span>Network</span><b class="s-net"></b></div><div><span>Network fee</span><b>~0.001 INFRA</b></div><div><span>Fiat value</span><b class="s-fv"></b></div></div>
         <button class="pbtn s-go">Review &amp; Send</button>`;
       const upd = () => {
         const k = $('.s-tok', host).value, a = +$('.s-amt', host).value || 0;
@@ -137,7 +137,7 @@
       V('swap').innerHTML = `
         <div class="hdr">${back}<h6>Swap</h6></div>
         <div class="box"><label>You pay</label>
-          <div class="amt-row"><input class="w-in" type="number" min="0" step="any" value="20"><span class="tsel"><select class="w-a">${tokOpts('reAED')}</select>▾</span></div>
+          <div class="amt-row"><input class="w-in" type="number" min="0" step="any" value="20"><span class="tsel"><select class="w-a">${tokOpts('INFRA')}</select>▾</span></div>
           <div class="mini"><span class="w-bal"></span><span><button data-p=".5">50%</button><button data-p="1">Max</button></span></div></div>
         <button class="flip" aria-label="Flip tokens">⇅</button>
         <div class="box"><label>You receive</label>
@@ -181,24 +181,24 @@
     };
 
     P.renderBridge = () => {
-      const nets = ['TRON', 'Ethereum', 'BNB Chain', 'INFRA'];
+      const nets = ['Ethereum', 'BNB Chain', 'TRON', 'INFRA', 'Arbitrum', 'Optimism', 'Base', 'Polygon', 'Avalanche'];
       const opt = s => nets.map(n => `<option ${n === s ? 'selected' : ''}>${n}</option>`).join('');
       V('bridge').innerHTML = `
         <div class="hdr">${back}<h6>Cross-Chain Bridge</h6></div>
         <div class="chain-sel">
-          <div class="chain"><small>From</small><select class="b-from">${opt('TRON')}</select></div>
+          <div class="chain"><small>From</small><select class="b-from">${opt('Ethereum')}</select></div>
           <button class="swapc" aria-label="Switch">⇄</button>
-          <div class="chain"><small>To</small><select class="b-to">${opt('INFRA')}</select></div>
+          <div class="chain"><small>To</small><select class="b-to">${opt('BNB Chain')}</select></div>
         </div>
         <div class="box"><label>Amount</label><div class="amt-row"><input class="b-amt" type="number" min="0" step="any" value="100"><span class="tsel">USDT</span></div>
           <div class="mini"><span>Balance: ${fmt(TOK.USDT.bal)} USDT</span></div></div>
         <div class="kv"><div><span>You receive</span><b class="b-rcv"></b></div><div><span>Bridge fee</span><b>0.1%</b></div><div><span>Est. arrival</span><b class="b-eta"></b></div><div><span>Route</span><b class="b-route"></b></div></div>
         <button class="pbtn b-go">Bridge assets</button>
-        <p style="font-size:10px;color:#7d7795;text-align:center;margin-top:10px">Coming soon: Polygon, Avalanche &amp; Arbitrum</p>`;
+        <p style="font-size:10px;color:#7d7795;text-align:center;margin-top:10px">Any-to-any · multi-hop routes via INFRA</p>`;
       const upd = () => {
         const f = $('.b-from', host).value, t = $('.b-to', host).value, a = +$('.b-amt', host).value || 0;
         $('.b-rcv', host).textContent = `${fmt(a * .999)} USDT`;
-        $('.b-eta', host).textContent = { TRON: '~1 min', Ethereum: '~3 min', 'BNB Chain': '~1 min', INFRA: '~10 sec' }[f];
+        $('.b-eta', host).textContent = ({ TRON: '~1 min', Ethereum: '~3 min', 'BNB Chain': '~45 sec', INFRA: '~10 sec' }[f] || '~30 sec');
         $('.b-route', host).textContent = `${f} → ${t}`;
         const g = $('.b-go', host); g.disabled = f === t || !a || a > TOK.USDT.bal;
         g.textContent = f === t ? 'Choose different networks' : a > TOK.USDT.bal ? 'Insufficient balance' : 'Bridge assets';
@@ -209,23 +209,22 @@
       upd();
     };
 
-    P.cash = { pending: 6.2, available: 18.4, claimed: 142.75 };
     P.renderRewards = () => {
       const c = P.cash;
       V('rewards').innerHTML = `
         <div class="hdr">${back}<h6>reID Cashback</h6></div>
         <div class="stats3"><div><b>${fmt(c.pending)}</b><span>Pending</span></div><div><b>${fmt(c.available)}</b><span>Available</span></div><div><b>${fmt(c.claimed)}</b><span>Claimed</span></div></div>
         <div class="chart">${[30, 45, 28, 60, 52, 75, 90].map(h => `<i data-h="${h}"></i>`).join('')}</div>
-        <button class="pbtn c-go" ${c.available ? '' : 'disabled'}>${c.available ? `Claim ${fmt(c.available)} reAED` : 'Nothing to claim'}</button>
+        <button class="pbtn c-go" ${c.available ? '' : 'disabled'}>${c.available ? `Claim ${fmt(c.available)} INFRA` : 'Nothing to claim'}</button>
         <div class="secttl">History</div>
         <div class="hist">
           <div><span>reMarketplace purchase</span><span class="g">+4.20</span></div>
-          <div><span>Swap reAED → USDT</span><span class="g">+0.60</span></div>
+          <div><span>Swap INFRA → USDT</span><span class="g">+0.60</span></div>
           <div><span>Merchant payment · Dubai</span><span class="g">+2.40</span></div>
           <div><span>reID verification bonus</span><span class="g">+10.00</span></div>
         </div>`;
       requestAnimationFrame(() => setTimeout(() => $$('.chart i', host).forEach(i => i.style.height = i.dataset.h + '%'), 60));
-      $('.c-go', host).onclick = () => P.confirm(`Claim ${fmt(c.available)} reAED`, 'Cashback to your wallet', () => { TOK.reAED.bal += c.available; c.claimed += c.available; c.available = 0; P.refresh(); }, 'Cashback claimed');
+      $('.c-go', host).onclick = () => P.confirm(`Claim ${fmt(c.available)} INFRA`, 'Cashback to your wallet', () => { TOK.INFRA.bal += c.available; c.claimed += c.available; c.available = 0; P.refresh(); }, 'Cashback claimed');
     };
 
     P.renderSettings = () => {
@@ -467,6 +466,57 @@
     btn.disabled = false;
   });
   $$('#contactForm input, #contactForm textarea').forEach(el => el.addEventListener('input', () => el.parentElement.classList.remove('err')));
+
+  /* ---------- mock bridge ---------- */
+  (() => {
+    const COL = { Ethereum: '#627eea', 'BNB Chain': '#f3ba2f', TRON: '#ff3b30', INFRA: '#7000ff', Arbitrum: '#28a0f0', Optimism: '#ff0420', Base: '#0052ff', Polygon: '#8247e5', Avalanche: '#e84142' };
+    const IC = { TRON: 'assets/tron.png', 'BNB Chain': 'assets/bnb.png', INFRA: 'assets/icon.png' };
+    const icOf = n => IC[n] || 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="${COL[n]}"/><text x="16" y="21" font-family="Arial" font-weight="700" font-size="13" fill="#fff" text-anchor="middle">${n.slice(0, 2)}</text></svg>`);
+    const ETA = { TRON: 60, Ethereum: 180, 'BNB Chain': 45, INFRA: 8, Arbitrum: 30, Optimism: 30, Base: 25, Polygon: 60, Avalanche: 20 };
+    const GAS = { TRON: 0.9, Ethereum: 2.4, 'BNB Chain': 0.12, INFRA: 0.001, Arbitrum: 0.05, Optimism: 0.04, Base: 0.02, Polygon: 0.01, Avalanche: 0.08 };
+    const NONEVM = ['TRON'];
+    const route = (f, t) => (NONEVM.includes(f) || NONEVM.includes(t)) && f !== 'INFRA' && t !== 'INFRA' ? [f, 'INFRA', t] : [f, t];
+    const eta = s => s < 60 ? `~${s} sec` : `~${Math.round(s / 60)} min`;
+    const BAL = { USDT: 1250, USDC: 640, ETH: 0.85, BNB: 3.2 };
+    const xb = $('#xb'); if (!xb) return;
+    const F = $('#xbFrom'), T = $('#xbTo'), A = $('#xbAmt'), K = $('#xbTok'), go = $('#xbGo');
+    let busy = false;
+    const upd = () => {
+      const f = F.value, t = T.value, a = +A.value || 0, k = K.value;
+      $$('[data-ic=from]', xb).forEach(i => i.src = icOf(f));
+      $$('[data-ic=to]', xb).forEach(i => i.src = icOf(t));
+      const r = route(f, t);
+      $('#xbRoute').textContent = r.join(' → ');
+      $('#xbHub').textContent = r.length > 2 ? 'Multi-hop via INFRA' : 'Direct route';
+      $('#xbL1').textContent = f; $('#xbL2').textContent = t;
+      $('#xbBal').textContent = `${fmt(BAL[k], k === 'ETH' || k === 'BNB' ? 4 : 2)} ${k}`;
+      $('#xbRcv').textContent = `${fmt(a * .999, a < 10 ? 4 : 2)} ${k}`;
+      $('#xbFee').textContent = `0.1% (${fmt(a * .001, 4)} ${k})`;
+      $('#xbGas').textContent = '≈ $' + fmt(r.reduce((s, n, i) => i < r.length - 1 ? s + GAS[n] : s, 0), 3);
+      $('#xbEta').textContent = eta(r.slice(0, -1).reduce((s, n) => s + ETA[n], 0) + (r.length > 2 ? 8 : 0));
+      const bad = f === t ? 'Choose different networks' : !a ? 'Enter an amount' : a > BAL[k] ? 'Insufficient balance' : '';
+      if (!busy) { go.disabled = !!bad; go.firstChild.textContent = bad || `Bridge ${k} to ${t} `; }
+    };
+    [F, T, A, K].forEach(e => e.addEventListener('input', upd));
+    $('#xbSwap').onclick = () => { const v = F.value; F.value = T.value; T.value = v; upd(); };
+    go.onclick = () => {
+      if (busy) return; busy = true; go.disabled = true; go.firstChild.textContent = 'Bridging… ';
+      const li = $$('#xbSteps li'); li.forEach(l => l.className = ''); $$('.xb-node', xb).forEach(n => n.classList.remove('lit'));
+      xb.classList.add('run'); $('#xbN1').classList.add('lit');
+      let i = 0;
+      const next = () => {
+        if (i) li[i - 1].className = 'ok';
+        if (i === li.length) {
+          xb.classList.remove('run'); $('#xbN2').classList.add('lit');
+          const a = +A.value, k = K.value; BAL[k] -= a;
+          busy = false; toast(`Bridged ${fmt(a * .999, 2)} ${k} to ${T.value} · demo`); upd(); return;
+        }
+        li[i].className = 'act'; i++; setTimeout(next, 1100);
+      };
+      next();
+    };
+    upd();
+  })();
 
   $('#yr').textContent = new Date().getFullYear();
 })();
