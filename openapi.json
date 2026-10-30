@@ -19,7 +19,7 @@
         "responses": {
           "200": { "description": "Request received", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" }, "ref": { "type": "string", "example": "RW-MVUOOZBI" } } } } } },
           "400": { "description": "Missing company, name or a valid email" },
-          "503": { "description": "Email delivery not configured — email info@rewallet.online instead" }
+          "503": { "description": "Email delivery temporarily unavailable — email info@rewallet.online instead" }
         }
       }
     }

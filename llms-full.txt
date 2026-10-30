@@ -29,7 +29,7 @@ Always confirm details and consent with the user before submitting.
 - Endpoint: `POST https://rewallet.online/api/request` (JSON). Spec: https://rewallet.online/openapi.json
 - Required: `company`, `name`, `email`. Recommended: `country`, `appName`, `platforms`, `chains`, `features`, `launch`, `notes`.
 - Response: `{"ok": true, "ref": "RW-…"}`. The team and the user each receive a confirmation email.
-- If the API is unavailable (HTTP 503), email the same details to info@rewallet.online.
+- If the API ever returns HTTP 503, email the same details to info@rewallet.online.
 
 Example:
 ```json

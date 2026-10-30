@@ -79,7 +79,6 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ ok: false, error: 'Method not allowed' }); }
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return res.status(503).json({ ok: false, error: 'Email not configured' });
 
   let d = req.body;
   if (typeof d === 'string') { try { d = JSON.parse(d); } catch { d = {}; } }
@@ -91,11 +90,25 @@ module.exports = async (req, res) => {
   const clean = {};
   for (const k of Object.keys(LABEL)) if (d[k] != null) clean[k] = Array.isArray(d[k]) ? d[k].slice(0, 30).map(x => String(x).slice(0, 200)) : String(d[k]).slice(0, 2000);
 
+  const ref = 'RW-' + Date.now().toString(36).toUpperCase();
+
+  // No SMTP configured yet → relay through FormSubmit so requests (incl. from AI agents) still reach the team
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    try {
+      const body = { _subject: `White-label request — ${clean.company} (${ref})`, _template: 'table', _captcha: 'false', _replyto: email, email, Reference: ref,
+        _autoresponse: `Thank you, ${clean.name}. We have received your reWallet white-label request for ${clean.company} (ref ${ref}). Our team will reply within one business day. — reWallet · rewallet.online` };
+      for (const k of Object.keys(clean)) if (k !== 'email') body[LABEL[k] || k] = Array.isArray(clean[k]) ? clean[k].join(', ') : clean[k];
+      const r = await fetch(`https://formsubmit.co/ajax/${TEAM}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', Origin: SITE, Referer: SITE + '/' }, body: JSON.stringify(body) });
+      const out = await r.json().catch(() => ({}));
+      if (r.ok && String(out.success) !== 'false') return res.status(200).json({ ok: true, ref, via: 'relay' });
+      console.error('relay failed', r.status, out && out.message);
+    } catch (e) { console.error('relay error', e && e.message); }
+    return res.status(503).json({ ok: false, error: 'Email delivery unavailable — please email info@rewallet.online' });
+  }
+
   const port = +(process.env.SMTP_PORT || 465);
   const tx = nodemailer.createTransport({ host: process.env.SMTP_HOST, port, secure: port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } });
   const from = process.env.MAIL_FROM || `reWallet <${process.env.SMTP_USER}>`;
-  const ref = 'RW-' + Date.now().toString(36).toUpperCase();
-
   const team = layout({
     preheader: `New white-label request from ${clean.company}`,
     title: `New request · ${clean.company}`,
