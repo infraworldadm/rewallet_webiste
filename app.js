@@ -587,11 +587,11 @@
 
   /* ---------- network orbit ---------- */
   const orbit = $('#orbit');
-  const live = [['Ethereum', '#8b7cff'], ['BSC', '#f3ba2f'], ['TRON', '#ff3b30']];
-  const soon = ['Polygon', 'Avalanche', 'Arbitrum', 'Optimism', 'Base', 'Solana'];
+  const live = [['Ethereum', '#8b7cff'], ['BSC', '#f3ba2f'], ['TRON', '#ff3b30'], ['Polygon', '#8247e5'], ['Avalanche', '#e84142'], ['Arbitrum', '#28a0f0'], ['Optimism', '#ff0420'], ['Base', '#0052ff']];
+  const soon = ['Solana', 'Sui', 'Aptos', 'TON', 'Your chain'];
   const orbs = [];
   live.forEach(([n, c], i) => { const d = document.createElement('div'); d.className = 'orb live'; d.style.setProperty('--c', c); d.textContent = n; orbit.appendChild(d); orbs.push({ d, r: .41, a: i / live.length * Math.PI * 2, s: .00025 }); });
-  soon.forEach((n, i) => { const d = document.createElement('div'); d.className = 'orb soon'; d.textContent = n; orbit.appendChild(d); orbs.push({ d, r: .25, a: i / soon.length * Math.PI * 2, s: -.0004 }); });
+  soon.forEach((n, i) => { const d = document.createElement('div'); d.className = 'orb soon' + (n === 'Your chain' ? ' own' : ''); d.textContent = n; orbit.appendChild(d); orbs.push({ d, r: .25, a: i / soon.length * Math.PI * 2, s: -.0004 }); });
   let last = performance.now(), orbVis = true;
   new IntersectionObserver(([e]) => orbVis = e.isIntersecting).observe(orbit);
   const spinOrbs = t => {

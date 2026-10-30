@@ -11,7 +11,7 @@ Website: https://rewallet.online · Contact: info@rewallet.online · Based in Du
 
 ## Key facts
 - Custody: non-custodial — private keys and recovery phrase stay on the user's device; no account freezes.
-- Networks: Ethereum, BNB Chain, TRON (live). Polygon, Avalanche, Arbitrum, Optimism, Base, Solana (coming soon). Custom EVM networks via RPC + Chain ID. New networks added on request.
+- Networks: Ethereum, BNB Chain, TRON, Polygon, Avalanche, Arbitrum, Optimism, Base (live). Solana, Sui, Aptos, TON (coming soon). Your own custom or private network on request. Custom EVM networks via RPC + Chain ID. New networks added on request.
 - Tokens: USDT, USDC, ETH, BNB, TRX, ERC-20, TRC-20, custom tokens by contract address. NFTs supported.
 - Features: send/receive, swaps (rate, fees, price impact, min. received, slippage), cross-chain bridge (any-to-any, multi-hop), NFT gallery, reID identity and cashback, merchant pay, multi-wallet, address book, multi-currency portfolio.
 - Security: Face ID / fingerprint, passkeys, PIN, recovery phrase, on-device encryption, transaction verification and simulation, risk detection and alerts.

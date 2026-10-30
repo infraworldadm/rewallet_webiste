@@ -1221,3 +1221,11 @@ html.vp-mini-on .sec:has(.vp.mini),html.vp-mini-on section:has(.vp.mini){z-index
 /* spacing polish */
 .scroll-hint{display:none}
 @media (max-width:900px){.faq-wrap{gap:16px}.faq .sec-head.left{margin-bottom:0}.faq details:first-child{padding-top:12px}}
+/* own network highlight */
+.own-net{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;margin-bottom:12px;border-radius:16px;border:1.5px dashed var(--v2);background:linear-gradient(120deg,rgba(112,0,255,.14),rgba(0,229,255,.06))}
+.own-ic{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--v);color:#fff;box-shadow:0 10px 24px -10px var(--v)}
+.own-ic svg{width:22px;height:22px}
+.own-net b{font-size:15px}.own-net p{color:var(--mut);font-size:14px;margin-top:4px}
+.fast-note .tagline{display:block;font-size:clamp(18px,1.8vw,22px);line-height:1.3;letter-spacing:-.01em}
+.orb.soon.own{opacity:1;color:#fff;background:var(--v);border:1.5px dashed rgba(255,255,255,.7);box-shadow:0 8px 22px -6px var(--v)}
+@media (max-width:640px){.orb{width:54px;height:54px;margin:-27px;font-size:9px}.orb.soon{width:44px;height:44px;margin:-22px;font-size:8px}}
