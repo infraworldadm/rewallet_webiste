@@ -1169,3 +1169,28 @@ input[type=range]{width:100%;accent-color:var(--v);height:28px;cursor:pointer}
 .wz-ok{width:72px;height:72px;border-radius:50%;background:#2ee59d;color:#06210f;display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
 .wz-ok svg{width:36px;height:36px}
 .wz-done h3{font-size:24px}.wz-done p{color:var(--mut);max-width:460px}
+
+/* ===== footer v2 ===== */
+.foot{border-top:1px solid var(--line);padding:56px 0 28px;background:var(--bg2)}
+.foot .wrap{display:block}
+.ft-cta{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:22px 26px;border-radius:20px;background:linear-gradient(120deg,#7a14ff,#4b00c2);color:#fff;margin-bottom:44px;box-shadow:0 20px 50px -20px rgba(112,0,255,.6)}
+.ft-cta b{display:block;font-size:20px;letter-spacing:-.01em}.ft-cta span{font-size:14px;opacity:.85}
+.ft-cta-b{display:flex;gap:10px;flex-wrap:wrap}
+.ft-cta .btn-primary{background:#fff;color:#4b00c2;box-shadow:none}
+.ft-cta .btn-ghost{color:#fff;border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.08)}
+.ft-grid{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:32px}
+.ft-brand p{color:var(--mut);font-size:14px;margin:14px 0;max-width:300px}
+.ft-brand img{height:26px;width:auto}
+.ft-badges{display:flex;gap:6px;flex-wrap:wrap}.ft-badges span{font:500 11px var(--mono);padding:5px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mut)}
+.ft-col{display:grid;gap:10px;align-content:start;font-size:14px}
+.ft-col h5{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);margin-bottom:4px}
+.ft-col a,.ft-col span{color:var(--mut);display:flex;align-items:center;gap:8px;transition:color .2s;width:fit-content}
+.ft-col a:hover{color:var(--accent-text)}
+.ft-col svg{width:16px;height:16px;flex:none}
+.ft-bot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--mut)}
+.ft-top{color:var(--accent-text);font-weight:500}
+@media (max-width:1000px){.ft-grid{grid-template-columns:1fr 1fr 1fr}.ft-brand{grid-column:1/-1}}
+@media (max-width:640px){.ft-grid{grid-template-columns:1fr 1fr;gap:26px}.ft-cta{padding:20px}.ft-bot{flex-direction:column;align-items:flex-start}}
+/* header: fewer links */
+.links{gap:28px;font-size:14px}
+@media (max-width:1280px) and (min-width:901px){.links a[href="#networks"],.links a[href="#faq"],.links a[href="#security"]{display:revert}}
