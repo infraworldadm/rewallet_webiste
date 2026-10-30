@@ -89,8 +89,8 @@ h4{font-size:16px;font-weight:600;margin-bottom:10px}
 @keyframes mq{to{transform:translateX(-50%)}}
 
 /* sections */
-.sec{position:relative;z-index:2;overflow-x:clip;padding:clamp(80px,10vw,130px) 0}
-.sec-head{text-align:center;max-width:780px;margin:0 auto 56px}
+.sec{position:relative;z-index:2;overflow-x:clip;padding:clamp(56px,6.5vw,92px) 0}
+.sec-head{text-align:center;max-width:780px;margin:0 auto clamp(32px,3.6vw,48px)}
 .sec-head p{color:var(--mut);margin-top:16px;font-size:17px}
 .sec-head.left{text-align:left;margin:0}
 
@@ -1218,3 +1218,6 @@ html.vp-mini-on .sec:has(.vp.mini),html.vp-mini-on section:has(.vp.mini){z-index
 .vp-mini-x{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(6px);cursor:pointer}
 .vp-mini-x svg{width:15px;height:15px}
 @media (max-width:640px){.vp.mini{right:10px;bottom:calc(10px + env(safe-area-inset-bottom))}.vp.mini .vp-seg{display:none}}
+/* spacing polish */
+.scroll-hint{display:none}
+@media (max-width:900px){.faq-wrap{gap:16px}.faq .sec-head.left{margin-bottom:0}.faq details:first-child{padding-top:12px}}
