@@ -1196,3 +1196,14 @@ input[type=range]{width:100%;accent-color:var(--v);height:28px;cursor:pointer}
 @media (max-width:1280px) and (min-width:901px){.links a[href="#networks"],.links a[href="#faq"],.links a[href="#security"]{display:revert}}
 .tabbar button:focus-visible,.acts button:focus-visible{outline:2px solid var(--act);outline-offset:-2px;border-radius:12px}
 .tabbar button:focus:not(:focus-visible){outline:none}
+/* explainer: mobile fixes */
+.vp-snd-chip[hidden]{display:none!important}
+.vp audio{display:none}
+html.fs-lock,html.fs-lock body{overflow:hidden}
+.vp.fs-fake{position:fixed;inset:0;z-index:2000;max-width:none;margin:0;border-radius:0;display:flex;flex-direction:column;justify-content:center;background:#0b0716;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.vp.fs-fake .vp-screen{width:100%;max-height:calc(100dvh - 140px)}
+.vp:fullscreen .vp-screen,.vp:-webkit-full-screen .vp-screen{width:100%;max-height:calc(100vh - 120px);margin:0 auto}
+.vp-big{touch-action:manipulation}.vp-ctrl button,.vp-ch button{touch-action:manipulation}
+@media (max-width:640px){.vp-btn{width:44px;height:44px}.vp-seg button{height:8px}}
+html.fs-lock .nav,html.fs-lock .toast{display:none}
+html.fs-lock .sec:has(.fs-fake),html.fs-lock section:has(.fs-fake){z-index:3000}

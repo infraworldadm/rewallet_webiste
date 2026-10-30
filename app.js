@@ -806,23 +806,30 @@
     show(0);
   })();
 
-  /* ---------- explainer "video" player — one narrated soundtrack (studio voice + music) drives the scenes ---------- */
+  /* ---------- explainer "video" player — one narrated soundtrack (studio voice + music) drives the scenes ----------
+     Works on iOS/Android: if the browser refuses silent autoplay of audio, scenes run on an internal clock and
+     the soundtrack joins at the same position as soon as the visitor taps for sound. */
   (() => {
     const vp = $('#vp'); if (!vp) return;
     const scenes = $$('.vs', vp), N = scenes.length;
-    const SRC = 'assets/explainer/narration.mp3';
-    const STARTS = [0, 17.68, 29.71, 37.53, 47.13, 58.72, 67.64, 78.48], TOTAL = 88.46; // chapter cue points (seconds)
+    const STARTS = [0, 17.68, 29.71, 37.53, 47.13, 58.72, 67.64, 78.48], TOTAL = 88.46; // chapter cue points (s)
     const chNames = ['The problem', 'The solution', 'Time saving', 'Developer saving', 'Future updates', 'Special requests', 'Fully managed', 'Deploy'];
     const DUR = STARTS.map((s, i) => (STARTS[i + 1] ?? TOTAL) - s);
-    const seg = $('#vpSeg'), ch = $('#vpCh'), time = $('#vpTime'), sndBtn = $('#vpSnd'), chip = $('#vpChip'), playBtn = $('#vpPlay');
+    const seg = $('#vpSeg'), ch = $('#vpCh'), time = $('#vpTime'), sndBtn = $('#vpSnd'), chip = $('#vpChip'), playBtn = $('#vpPlay'), fsBtn = $('#vpFs');
     seg.innerHTML = scenes.map((_, i) => `<button aria-label="Chapter ${i + 1}: ${chNames[i]}" style="flex:${DUR[i]}"><i></i></button>`).join('');
     ch.innerHTML = chNames.map((n, i) => `<button>${i + 1}. ${n}</button>`).join('');
     const bars = $$('i', seg);
-    const audio = new Audio(); audio.preload = 'metadata'; audio.src = SRC; audio.muted = true;
-    let idx = -1, raf, broken = false, clock = 0, last = 0, fakePlaying = false;
+    const audio = document.createElement('audio');
+    audio.src = 'assets/explainer/narration.mp3'; audio.preload = 'metadata'; audio.muted = true;
+    audio.setAttribute('playsinline', ''); audio.setAttribute('webkit-playsinline', ''); audio.hidden = true;
+    vp.appendChild(audio);
+    let idx = -1, raf, useClock = false, clockOn = false, clock = 0, last = 0, pendingSeek = null, audioFailed = false;
     const mm = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-    const now = () => broken ? clock : audio.currentTime;
-    const isPlaying = () => broken ? fakePlaying : !audio.paused && !audio.ended;
+    const now = () => useClock ? clock : (pendingSeek ?? audio.currentTime);
+    const isPlaying = () => useClock ? clockOn : !audio.paused && !audio.ended;
+    const soundOn = () => !useClock && !audio.muted;
+    const setTime = t => { clock = t; if (audio.readyState >= 1) { try { audio.currentTime = t; pendingSeek = null; } catch { pendingSeek = t; } } else pendingSeek = t; };
+    audio.addEventListener('loadedmetadata', () => { if (pendingSeek != null) { try { audio.currentTime = pendingSeek; } catch {} pendingSeek = null; } });
     const counters = sc => $$('[data-to]', sc).forEach(el => {
       const to = +el.dataset.to, suf = el.dataset.suf || '', dur = to === 100 ? 3400 : 2200, t0 = performance.now();
       const st = n => { const p = Math.min((n - t0) / dur, 1); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suf; if (p < 1 && scenes[idx] === sc) requestAnimationFrame(st); };
@@ -841,43 +848,74 @@
       bars.forEach((b, i) => b.style.width = i < k ? '100%' : i > k ? '0' : Math.min((t - STARTS[i]) / DUR[i] * 100, 100) + '%');
       time.textContent = `${mm(t)} / ${mm(TOTAL)}`;
     };
-    const loop = n => {
-      if (broken && fakePlaying) { clock += Math.max(0, n - last) / 1000; last = n; if (clock >= TOTAL) { clock = TOTAL; pause(); } }
-      render(); if (isPlaying()) raf = requestAnimationFrame(loop);
-    };
     const ui = () => {
-      const p = isPlaying(); vp.classList.toggle('playing', p); playBtn.setAttribute('aria-label', p ? 'Pause' : 'Play');
-      const s = !audio.muted && !broken; vp.classList.toggle('sound', s); sndBtn.setAttribute('aria-pressed', s); sndBtn.setAttribute('aria-label', s ? 'Mute' : 'Turn sound on');
-      chip.hidden = s || !vp.classList.contains('started') || broken;
+      const p = isPlaying(), s = soundOn();
+      vp.classList.toggle('playing', p); playBtn.setAttribute('aria-label', p ? 'Pause' : 'Play');
+      vp.classList.toggle('sound', s); sndBtn.setAttribute('aria-pressed', String(s)); sndBtn.setAttribute('aria-label', s ? 'Mute' : 'Turn sound on');
+      chip.hidden = s || audioFailed || !vp.classList.contains('started');
     };
-    const play = async () => {
-      vp.classList.add('started'); if (idx >= 0) counters(scenes[idx]);
-      if (now() >= TOTAL - .05) { if (broken) clock = 0; else audio.currentTime = 0; idx = -1; }
-      if (broken) { fakePlaying = true; last = performance.now(); }
-      else { try { await audio.play(); } catch { if (!audio.muted) { audio.muted = true; try { await audio.play(); } catch { broken = true; fakePlaying = true; last = performance.now(); } } else { broken = true; fakePlaying = true; last = performance.now(); } } }
-      ui(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
+    const loop = n => {
+      if (useClock && clockOn) { clock += Math.max(0, n - last) / 1000; last = n; if (clock >= TOTAL) { clock = TOTAL; clockOn = false; } }
+      render(); ui();
+      if (isPlaying()) raf = requestAnimationFrame(loop);
     };
-    const pause = () => { if (broken) fakePlaying = false; else audio.pause(); cancelAnimationFrame(raf); ui(); };
-    const seek = k => { if (broken) clock = STARTS[k]; else audio.currentTime = STARTS[k] + .01; idx = -1; render(); };
+    const startLoop = () => { cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(loop); };
+    const runClock = () => { useClock = true; clockOn = true; audio.pause(); startLoop(); ui(); };
+    // must be called synchronously from a tap when sound is wanted (iOS rule)
+    const play = withSound => {
+      const first = !vp.classList.contains('started');
+      vp.classList.add('started');
+      if (now() >= TOTAL - .05) { setTime(0); idx = -1; }
+      if (first && idx >= 0) counters(scenes[idx]);
+      if (withSound) {
+        if (useClock) { setTime(clock); useClock = false; clockOn = false; }
+        audio.muted = false;
+      } else if (useClock) { runClock(); return; }
+      if (audioFailed) { runClock(); return; }
+      const pr = audio.play();
+      startLoop(); ui();
+      if (pr && pr.catch) pr.catch(() => {
+        // browser refused (e.g. silent autoplay on iOS): keep the scenes moving on the clock; a tap adds sound
+        clock = audio.currentTime || clock; audio.muted = true; runClock();
+      });
+    };
+    const pause = () => { clockOn = false; audio.pause(); cancelAnimationFrame(raf); ui(); };
+    const seek = k => { setTime(STARTS[k] + .01); idx = -1; render(); };
     audio.addEventListener('ended', () => { cancelAnimationFrame(raf); render(); ui(); });
-    audio.addEventListener('pause', ui); audio.addEventListener('play', ui);
-    audio.addEventListener('error', () => { if (!broken) { broken = true; clock = audio.currentTime || 0; } ui(); });
-    const withSound = () => { audio.muted = false; play(); };
-    $('#vpBig').onclick = withSound;
-    chip.onclick = e => { e.stopPropagation(); withSound(); };
-    sndBtn.onclick = () => { audio.muted = !audio.muted; if (!audio.muted && !isPlaying()) play(); ui(); };
-    playBtn.onclick = () => isPlaying() ? pause() : play();
-    $('.vp-screen', vp).addEventListener('click', e => { if (!e.target.closest('a,.vp-big,.vp-snd-chip') && vp.classList.contains('started')) isPlaying() ? pause() : play(); });
-    $$('button', seg).forEach((b, k) => b.onclick = () => { seek(k); play(); });
-    $$('button', ch).forEach((b, k) => b.onclick = () => { seek(k); play(); });
-    $('#vpFs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else vp.requestFullscreen?.(); };
+    audio.addEventListener('pause', ui); audio.addEventListener('playing', ui);
+    audio.addEventListener('error', () => { audioFailed = true; if (isPlaying() && !useClock) runClock(); ui(); });
+    $('#vpBig').addEventListener('click', () => play(true));
+    chip.addEventListener('click', e => { e.stopPropagation(); play(true); });
+    sndBtn.addEventListener('click', () => {
+      if (soundOn()) { audio.muted = true; ui(); return; }
+      play(true);
+    });
+    playBtn.addEventListener('click', () => isPlaying() ? pause() : play(soundOn() || vp.classList.contains('started')));
+    $('.vp-screen', vp).addEventListener('click', e => {
+      if (e.target.closest('a,button')) return;
+      if (!vp.classList.contains('started') || (isPlaying() && !soundOn())) return play(true);
+      isPlaying() ? pause() : play(soundOn());
+    });
+    $$('button', seg).forEach((b, k) => b.addEventListener('click', () => { seek(k); play(true); }));
+    $$('button', ch).forEach((b, k) => b.addEventListener('click', () => { seek(k); play(true); }));
+    // full screen: native where supported (desktop, Android, iPad); CSS full-screen fallback on iPhone
+    const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+    const setFake = on => { vp.classList.toggle('fs-fake', on); document.documentElement.classList.toggle('fs-lock', on); fsBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen'); };
+    fsBtn.addEventListener('click', () => {
+      if (vp.classList.contains('fs-fake')) return setFake(false);
+      if (fsEl()) return (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      const req = vp.requestFullscreen || vp.webkitRequestFullscreen;
+      if (req) { try { const r = req.call(vp); if (r && r.catch) r.catch(() => setFake(true)); return; } catch {} }
+      setFake(true);
+    });
+    addEventListener('keydown', e => { if (e.key === 'Escape' && vp.classList.contains('fs-fake')) setFake(false); });
     show(0); render(); ui();
-    // silent preview when scrolled into view; sound needs a tap (browser autoplay rules)
+    // silent preview when scrolled into view (browsers only allow sound after a tap)
     let auto = false;
     new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !auto && !reduce) { auto = true; audio.preload = 'auto'; play(); }
-      if (!e.isIntersecting && isPlaying()) pause();
-    }, { threshold: .6 }).observe(vp);
+      if (e.isIntersecting && !auto && !reduce) { auto = true; audio.preload = 'auto'; play(false); }
+      if (!e.isIntersecting && isPlaying() && !vp.classList.contains('fs-fake') && !fsEl()) pause();
+    }, { threshold: .5 }).observe(vp);
     document.addEventListener('visibilitychange', () => { if (document.hidden && isPlaying()) pause(); });
   })();
 
