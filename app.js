@@ -706,5 +706,51 @@
   });
   $$('#contactForm input, #contactForm textarea').forEach(el => el.addEventListener('input', () => el.parentElement.classList.remove('err')));
 
+  /* ---------- security showcase ---------- */
+  (() => {
+    const sec = $('#security'); if (!sec) return;
+    const items = $$('.sx-i', sec), scenes = $$('.sx-scene', sec), title = $('#sxTitle');
+    const titles = ['Biometric approval', 'Recovery phrase & PIN', 'On-device encryption', 'Transaction preview', 'Risk detection'];
+    const DUR = 4500; let cur = 0, timer, sub = [], inView = false, paused = false;
+    const clearSub = () => { sub.forEach(clearTimeout); sub.forEach(clearInterval); sub = []; };
+    const words = ['orbit', 'lunar', 'cedar', 'prism', 'delta', 'ember', 'nova', 'atlas', 'quartz', 'harbor', 'velvet', 'summit'];
+    const hex = () => Array.from({ length: 64 }, () => '0123456789abcdef'[(Math.random() * 16) | 0]).join('');
+    const run = i => {
+      const sc = scenes[i];
+      if (i === 0) {
+        const f = $('.fx-face', sc); f.classList.remove('ok'); sc.classList.remove('ok-state');
+        sub.push(setTimeout(() => { f.classList.add('ok'); sc.classList.add('ok-state'); }, 1900));
+      }
+      if (i === 1) {
+        const g = $('#seedg'); g.innerHTML = words.map((w, k) => `<span class="hid"><em>${k + 1}</em>${w}</span>`).join('');
+        const sp = $$('span', g), pins = $$('.pin i', sc); pins.forEach(p => p.classList.remove('f'));
+        sp.forEach((s, k) => sub.push(setTimeout(() => { s.classList.remove('hid'); s.classList.add('rev'); }, 150 + k * 150)));
+        sub.push(setTimeout(() => sp.forEach(s => s.classList.add('hid')), 2600));
+        pins.forEach((p, k) => sub.push(setTimeout(() => p.classList.add('f'), 2800 + k * 180)));
+      }
+      if (i === 2) {
+        const c = $('#cipher'), k = $('#encKey'); c.textContent = '';
+        sub.push(setInterval(() => { c.textContent = (hex() + hex() + '\n' + c.textContent).slice(0, 900); k.textContent = '0x' + hex().slice(0, 4) + '…' + hex().slice(0, 4); }, 140));
+      }
+      if (i === 3) {
+        const rs = $$('.txv-r', sc), go = $('.txv-go', sc); rs.forEach(r => r.className = 'txv-r'); go.classList.remove('ok'); go.textContent = 'Verifying…';
+        rs.forEach((r, k) => { sub.push(setTimeout(() => r.classList.add('cur'), 200 + k * 600)); sub.push(setTimeout(() => { r.classList.remove('cur'); r.classList.add('ok'); }, 700 + k * 600)); });
+        sub.push(setTimeout(() => { go.classList.add('ok'); go.textContent = 'Ready to sign · Face ID'; }, 700 + rs.length * 600));
+      }
+    };
+    const show = i => {
+      cur = i; clearSub();
+      items.forEach((b, k) => { b.classList.toggle('on', k === i); b.setAttribute('aria-selected', k === i); });
+      scenes.forEach((s, k) => s.classList.toggle('on', k === i));
+      title.textContent = titles[i]; run(i);
+      items[i].querySelector('.bar').style.animation = 'none'; void items[i].offsetWidth; items[i].querySelector('.bar').style.animation = '';
+      clearTimeout(timer); if (!reduce && !paused) timer = setTimeout(() => inView && show((cur + 1) % items.length), DUR);
+    };
+    items.forEach((b, k) => b.onclick = () => { paused = true; sec.classList.add('paused'); show(k); });
+    sec.style.setProperty('--sxd', DUR + 'ms');
+    new IntersectionObserver(([e]) => { const was = inView; inView = e.isIntersecting; if (inView && !was) show(cur); if (!inView) { clearTimeout(timer); clearSub(); } }, { threshold: .3 }).observe(sec);
+    show(0);
+  })();
+
   $('#yr').textContent = new Date().getFullYear();
 })();

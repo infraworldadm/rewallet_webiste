@@ -51,16 +51,7 @@
 <section class="hero">
   <div class="aurora" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="hgrid" aria-hidden="true"></div>
-  <canvas id="particles" aria-hidden="true"></canvas>
-  <div class="coins" aria-hidden="true">
-    <span class="coin k1"><img src="assets/usdt.png" alt=""></span>
-    <span class="coin k2"><img src="assets/bnb.png" alt=""></span>
-    <span class="coin k3"><img src="assets/tron.png" alt=""></span>
-    <span class="coin k4 eth"><svg viewBox="0 0 32 32"><path fill="#fff" fill-opacity=".6" d="M16.5 4v8.9l7.5 3.3z"/><path fill="#fff" d="M16.5 4 9 16.2l7.5-3.3z"/><path fill="#fff" fill-opacity=".6" d="M16.5 21.9V28l7.5-10.4z"/><path fill="#fff" d="M16.5 28v-6.1L9 17.6z"/></svg></span>
-    <span class="coin k5 usdc">$</span>
-    <span class="beam b1"></span><span class="beam b2"></span><span class="beam b3"></span>
-  </div>
-  <div class="hero-bg" style="background-image:url(assets/hero.jpg)"></div>
+  <div class="hspot" aria-hidden="true"></div>
   <div class="wrap hero-grid">
     <div class="hero-copy">
       <a href="https://rewallet.online" class="pill reveal"><i class="dot"></i> rewallet.online · Decentralized · Non-custodial</a>
@@ -81,6 +72,8 @@
         <div class="float-chip c1"><img src="assets/usdt.png" alt=""> +32 USDT</div>
         <div class="float-chip c2"><span class="ok">✓</span> Swap complete</div>
         <div class="float-chip c3">⚡ Cashback +2.40 USDT</div>
+        <div class="h-orbit o1" aria-hidden="true"><span class="oc" style="--a:0deg"><b><img src="assets/usdt.png" alt=""></b></span><span class="oc" style="--a:120deg"><b><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627eea"/><path fill="#fff" fill-opacity=".6" d="M16.5 4v8.9l7.5 3.3z"/><path fill="#fff" d="M16.5 4 9 16.2l7.5-3.3z"/><path fill="#fff" fill-opacity=".6" d="M16.5 21.9V28l7.5-10.4z"/><path fill="#fff" d="M16.5 28v-6.1L9 17.6z"/></svg></b></span><span class="oc" style="--a:240deg"><b><img src="assets/bnb.png" alt=""></b></span></div>
+        <div class="h-orbit o2" aria-hidden="true"><span class="oc" style="--a:60deg"><b><img src="assets/tron.png" alt=""></b></span><span class="oc" style="--a:200deg"><b class="usdc">$</b></span><span class="oc" style="--a:320deg"><b class="arb">AR</b></span></div>
         <div class="phone tilt" data-phone="hero"></div>
       </div>
       <div class="qr-card">
@@ -255,27 +248,78 @@
 </section>
 
 <!-- SECURITY -->
-<section id="security" class="sec">
-  <div class="wrap sec-split">
+<section id="security" class="sec secx">
+  <div class="secx-bg" aria-hidden="true"><span class="sx-grid"></span><span class="sx-glow g1"></span><span class="sx-glow g2"></span></div>
+  <div class="wrap secx-grid">
     <div class="reveal">
       <span class="eyebrow">Secure wallet management</span>
       <h2>Multiple layers of protection. <span class="grad">Zero custody.</span></h2>
-      <p class="lead">Keys are generated and encrypted on your device. Nobody — not even reWallet — can move, freeze or recover your assets without you.</p>
-      <div class="sec-list">
-        <div class="sl"><i>◉</i><div><b>Face ID / Fingerprint &amp; Passkeys</b><span>Biometric approval for every sensitive action.</span></div></div>
-        <div class="sl"><i>▦</i><div><b>PIN &amp; Recovery Phrase</b><span>12/24-word backup that only you hold.</span></div></div>
-        <div class="sl"><i>⛨</i><div><b>Secure Encryption</b><span>Keys never leave your device unencrypted.</span></div></div>
-        <div class="sl"><i>✓</i><div><b>Transaction Verification</b><span>Clear previews of recipient, fees and network before signing.</span></div></div>
-        <div class="sl"><i>⚠</i><div><b>Risk Detection &amp; Notifications</b><span>Warnings for suspicious addresses and approvals.</span></div></div>
+      <p class="lead">Keys are generated and encrypted on your device. Nobody — not even reWallet — can move, freeze or recover your assets without you. Tap a layer to see it in action.</p>
+      <div class="sx-list" role="tablist" aria-label="Security layers">
+        <button class="sx-i on" role="tab" aria-selected="true" data-s="0"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M9 9v1M15 9v1M12 9v4h-1M9 16c1.6 1.3 4.4 1.3 6 0"/></svg></i><span><b>Face ID / Fingerprint &amp; Passkeys</b><small>Biometric approval for every sensitive action.</small></span><em class="bar"></em></button>
+        <button class="sx-i" role="tab" aria-selected="false" data-s="1"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h3M13 9h3M8 13h3M13 13h3M8 17h3"/></svg></i><span><b>PIN &amp; Recovery Phrase</b><small>12/24-word backup that only you hold.</small></span><em class="bar"></em></button>
+        <button class="sx-i" role="tab" aria-selected="false" data-s="2"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3M12 15v2"/></svg></i><span><b>Secure Encryption</b><small>Keys never leave your device unencrypted.</small></span><em class="bar"></em></button>
+        <button class="sx-i" role="tab" aria-selected="false" data-s="3"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg></i><span><b>Transaction Verification</b><small>Clear previews of recipient, fees and network before signing.</small></span><em class="bar"></em></button>
+        <button class="sx-i" role="tab" aria-selected="false" data-s="4"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3 2 20h20zM12 10v4M12 17h.01"/></svg></i><span><b>Risk Detection &amp; Notifications</b><small>Warnings for suspicious addresses and approvals.</small></span><em class="bar"></em></button>
       </div>
     </div>
-    <div class="vault reveal" aria-hidden="true">
-      <div class="vault-ring r1"></div><div class="vault-ring r2"></div><div class="vault-ring r3"></div>
-      <div class="vault-core"><img src="assets/icon.png" alt=""></div>
-      <div class="seed">
-        <span>orbit</span><span>••••</span><span>lunar</span><span>••••</span><span>cedar</span><span>••••</span>
-        <span>••••</span><span>prism</span><span>••••</span><span>delta</span><span>••••</span><span>ember</span>
+
+    <div class="sx-stage reveal" aria-live="polite">
+      <div class="sx-ring r1"></div><div class="sx-ring r2"></div>
+      <div class="sx-card">
+        <div class="sx-top"><span class="sx-dot"></span><span class="sx-dot"></span><span class="sx-dot"></span><b id="sxTitle">Biometric approval</b><span class="sx-live">LIVE</span></div>
+
+        <!-- 0 biometrics -->
+        <div class="sx-scene on" data-s="0">
+          <div class="fx-face">
+            <svg viewBox="0 0 120 120" class="fx-svg"><path class="fx-c" d="M20 40V26a6 6 0 0 1 6-6h14M80 20h14a6 6 0 0 1 6 6v14M100 80v14a6 6 0 0 1-6 6H80M40 100H26a6 6 0 0 1-6-6V80"/><g class="fx-f"><path d="M44 48v6M76 48v6M60 48v18h-5M46 78c8 7 20 7 28 0"/></g><path class="fx-ok" d="m42 62 13 13 25-28"/></svg>
+            <span class="fx-scan"></span>
+            <span class="fx-dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          </div>
+          <div class="fx-meta"><span>Approve <b>Send 250 USDT</b></span><span class="fx-st"><em class="spin"></em><span class="t1">Scanning…</span><span class="t2">Verified</span></span></div>
+          <div class="fx-chips"><span>Face ID</span><span>Fingerprint</span><span>Passkey · WebAuthn</span></div>
+        </div>
+
+        <!-- 1 seed phrase -->
+        <div class="sx-scene" data-s="1">
+          <div class="seedg" id="seedg"></div>
+          <div class="pin"><span>PIN</span><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="sx-note">Written down offline · never uploaded · restore on any device</p>
+        </div>
+
+        <!-- 2 encryption -->
+        <div class="sx-scene" data-s="2">
+          <div class="enc">
+            <div class="enc-key"><span>Private key</span><code id="encKey">0x8f3a…e21c</code></div>
+            <div class="enc-pipe"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="enc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Secure Enclave</span><small>AES-256-GCM</small></div>
+          </div>
+          <div class="cipher" id="cipher" aria-hidden="true"></div>
+        </div>
+
+        <!-- 3 tx verification -->
+        <div class="sx-scene" data-s="3">
+          <div class="txv">
+            <div class="txv-h"><span>Review transaction</span><b>250.00 USDT</b></div>
+            <div class="txv-r"><span>Recipient</span><b>0x9a1F…c42B</b><i></i></div>
+            <div class="txv-r"><span>Network</span><b>BNB Chain</b><i></i></div>
+            <div class="txv-r"><span>Network fee</span><b>$0.12</b><i></i></div>
+            <div class="txv-r"><span>Contract</span><b>Verified · Tether USD</b><i></i></div>
+            <div class="txv-r"><span>Simulation</span><b>−250 USDT · no approvals</b><i></i></div>
+            <div class="txv-go">Ready to sign</div>
+          </div>
+        </div>
+
+        <!-- 4 risk radar -->
+        <div class="sx-scene" data-s="4">
+          <div class="radar">
+            <span class="rd-sweep"></span><span class="rd-c c1"></span><span class="rd-c c2"></span><span class="rd-c c3"></span>
+            <span class="blip b1"></span><span class="blip b2"></span><span class="blip b3"></span><span class="blip bad"></span>
+          </div>
+          <div class="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3 2 20h20zM12 10v4M12 17h.01"/></svg><span><b>Suspicious address blocked</b><small>0x7b2e…9f01 linked to a phishing drainer</small></span></div>
+        </div>
       </div>
+      <div class="sx-badges"><span>Non-custodial</span><span>On-device keys</span><span>Open standards</span></div>
     </div>
   </div>
 </section>
