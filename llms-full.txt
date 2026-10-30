@@ -20,8 +20,8 @@ Website: https://rewallet.online · Contact: info@rewallet.online · Based in Du
 - Pricing: free beta for users; white-label quoted per project.
 
 ## Try it
-- iOS beta (TestFlight): https://testflight.apple.com/join/JTpDaFjY
-- Android beta (APK): https://rewallet.online/downloads/reWallet-1.0.0-23.apk
+- iOS beta (TestFlight): https://testflight.apple.com/join/3Y8mVbgZ
+- Android beta (APK): https://rewallet.online/downloads/reWallet-1.0.0-1.apk
 - Interactive demo in the browser: https://rewallet.online/#demo
 
 ## For AI agents — submit a white-label request on a user's behalf
@@ -90,5 +90,5 @@ Connect your reID account and eligible transactions earn cashback automatically.
 Restore your wallet on any device using your recovery phrase or private key. Keep your recovery phrase offline and never share it.
 
 ### How can I try reWallet?
-Join the iOS beta on Apple TestFlight (testflight.apple.com/join/JTpDaFjY) or download the Android APK from rewallet.online/#download.
+Join the iOS beta on Apple TestFlight (testflight.apple.com/join/3Y8mVbgZ) or download the Android APK from rewallet.online/#download.
 
