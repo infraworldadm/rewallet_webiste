@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "reWallet marketing website (static) + /api/request email function",
-  "engines": { "node": ">=18" },
+  "engines": { "node": "20.x" },
   "dependencies": {
     "nodemailer": "^6.9.16"
   }
