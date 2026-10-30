@@ -1,0 +1,10 @@
+{
+  "name": "rewallet-website",
+  "private": true,
+  "version": "1.0.0",
+  "description": "reWallet marketing website (static) + /api/request email function",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "nodemailer": "^6.9.16"
+  }
+}

@@ -1162,3 +1162,10 @@ input[type=range]{width:100%;accent-color:var(--v);height:28px;cursor:pointer}
 .links{gap:20px;font-size:13.5px}.links a{white-space:nowrap}
 @media (max-width:1280px) and (min-width:901px){.links a[href="#networks"],.links a[href="#faq"],.links a[href="#security"]{display:none}}
 @media (min-width:901px){.links .m-only{display:none}}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.spin-s{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .7s linear infinite;display:inline-block}
+.wz.sent>*:not(.wz-done):not(.hp){display:none!important}
+.wz-done{display:grid;justify-items:center;text-align:center;gap:12px;padding:40px 10px;animation:fadeD .5s}
+.wz-ok{width:72px;height:72px;border-radius:50%;background:#2ee59d;color:#06210f;display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.wz-ok svg{width:36px;height:36px}
+.wz-done h3{font-size:24px}.wz-done p{color:var(--mut);max-width:460px}

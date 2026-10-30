@@ -675,10 +675,11 @@
   })();
 
   /* ---------- white-label request wizard ---------- */
-  // Set CONTACT_ENDPOINT to a form backend (Formspree, your API…) to POST the answers as JSON.
-  // If empty, the request opens the visitor's email app addressed to CONTACT_EMAIL with all answers.
-  const CONTACT_ENDPOINT = '';
+  // Submissions go to /api/request (Vercel function → branded emails to our team and the client).
+  // If that isn't configured, they fall back to the FormSubmit relay (team copy + plain auto-reply).
+  const CONTACT_ENDPOINT = '/api/request';
   const CONTACT_EMAIL = 'info@rewallet.online';
+  const FALLBACK_ENDPOINT = `https://formsubmit.co/ajax/${CONTACT_EMAIL}`;
   (() => {
     const form = $('#wz'); if (!form) return;
     const steps = $$('.wz-step', form), nav = $$('#wzNav li'), msg = $('#formMsg');
@@ -722,24 +723,314 @@
       e.preventDefault();
       for (let k = 0; k < steps.length - 1; k++) if (!validate(k)) return go(k);
       if (!$('#wzConsent').checked) { msg.className = 'form-msg bad'; msg.textContent = 'Please tick the consent box to send.'; return; }
-      const d = data(); submit.disabled = true;
+      const d = data(); submit.disabled = true; back.disabled = true;
+      submit.innerHTML = '<span class="spin-s"></span> Sending…'; msg.className = 'form-msg'; msg.textContent = '';
+      let ref = '';
       try {
-        if (CONTACT_ENDPOINT) {
-          const r = await fetch(CONTACT_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ type: 'White-label request', ...d }) });
-          if (!r.ok) throw new Error();
-          msg.className = 'form-msg ok'; msg.textContent = 'Thank you — your request is in. We\'ll reply within one business day.';
-        } else {
-          const body = 'reWallet white-label request\n\n' + steps.slice(0, -1).map((st, i) => {
-            const keys = [...new Set($$('[name]', st).map(x => x.name))].filter(k => d[k]);
-            return `== ${names[i]} ==\n` + keys.map(k => `${LABEL[k] || k}: ${[].concat(d[k]).join(', ')}`).join('\n');
-          }).join('\n\n');
-          location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('White-label request — ' + (d.company || ''))}&body=${encodeURIComponent(body)}`;
-          msg.className = 'form-msg ok'; msg.textContent = 'Opening your email app with your answers — just press send.';
+        // 1) branded emails to our team + the client via /api/request (Vercel function, SMTP)
+        let ok = false;
+        try {
+          const r = await fetch(CONTACT_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+          const j = await r.json().catch(() => ({}));
+          if (r.ok && j.ok) { ok = true; ref = j.ref || ''; }
+          else if (r.status === 400) throw new Error(j.error || 'Please check your answers.');
+        } catch (err) { if (/check|valid|Missing/i.test(err.message)) throw err; }
+        // 2) fallback: FormSubmit relay (team copy + auto-reply to the client)
+        if (!ok) {
+          const body = Object.fromEntries(Object.entries(d).map(([k, v]) => [LABEL[k] || k, [].concat(v).join(', ')]));
+          Object.assign(body, {
+            _subject: `White-label request — ${d.company}`, _template: 'table', _captcha: 'false', _replyto: d.email, email: d.email,
+            _autoresponse: `Thank you, ${d.name}. We have received your reWallet white-label request for ${d.company}. Our team will reply within one business day with a tailored proposal, timeline and demo build. — reWallet · rewallet.online`,
+          });
+          const r = await fetch(FALLBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok || String(j.success) === 'false') throw new Error('send');
         }
-      } catch { msg.className = 'form-msg bad'; msg.textContent = 'Something went wrong. Please email info@rewallet.online.'; }
-      submit.disabled = false;
+        form.classList.add('sent');
+        $('.wz-done', form)?.remove();
+        form.insertAdjacentHTML('beforeend', `<div class="wz-done"><div class="wz-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg></div><h3>Request received${ref ? ` · ${ref}` : ''}</h3><p>Thank you, ${esc(d.name)}. We've sent a confirmation to <b>${esc(d.email)}</b> and our team will reply within one business day with a tailored proposal.</p><a class="btn btn-ghost" href="#download">Try the beta meanwhile</a></div>`);
+        $$('#wzNav li').forEach(l => l.classList.add('done'));
+        $('#wzBar').style.width = '100%';
+      } catch (err) {
+        msg.className = 'form-msg bad';
+        msg.textContent = err.message && err.message !== 'send' ? err.message : 'We couldn\'t send your request just now. Please try again in a moment.';
+      }
+      submit.disabled = false; back.disabled = false; submit.innerHTML = 'Send request <span class="arr">→</span>';
     });
     go(0);
+  })();
+
+  /* ---------- security showcase ---------- */
+  (() => {
+    const sec = $('#security'); if (!sec) return;
+    const items = $$('.sx-i', sec), scenes = $$('.sx-scene', sec), title = $('#sxTitle');
+    const titles = ['Biometric approval', 'Recovery phrase & PIN', 'On-device encryption', 'Transaction preview', 'Risk detection'];
+    const DUR = 4500; let cur = 0, timer, sub = [], inView = false, paused = false;
+    const clearSub = () => { sub.forEach(clearTimeout); sub.forEach(clearInterval); sub = []; };
+    const words = ['orbit', 'lunar', 'cedar', 'prism', 'delta', 'ember', 'nova', 'atlas', 'quartz', 'harbor', 'velvet', 'summit'];
+    const hex = () => Array.from({ length: 64 }, () => '0123456789abcdef'[(Math.random() * 16) | 0]).join('');
+    const run = i => {
+      const sc = scenes[i];
+      if (i === 0) {
+        const f = $('.fx-face', sc); f.classList.remove('ok'); sc.classList.remove('ok-state');
+        sub.push(setTimeout(() => { f.classList.add('ok'); sc.classList.add('ok-state'); }, 1900));
+      }
+      if (i === 1) {
+        const g = $('#seedg'); g.innerHTML = words.map((w, k) => `<span class="hid"><em>${k + 1}</em>${w}</span>`).join('');
+        const sp = $$('span', g), pins = $$('.pin i', sc); pins.forEach(p => p.classList.remove('f'));
+        sp.forEach((s, k) => sub.push(setTimeout(() => { s.classList.remove('hid'); s.classList.add('rev'); }, 150 + k * 150)));
+        sub.push(setTimeout(() => sp.forEach(s => s.classList.add('hid')), 2600));
+        pins.forEach((p, k) => sub.push(setTimeout(() => p.classList.add('f'), 2800 + k * 180)));
+      }
+      if (i === 2) {
+        const c = $('#cipher'), k = $('#encKey'); c.textContent = '';
+        sub.push(setInterval(() => { c.textContent = (hex() + hex() + '\n' + c.textContent).slice(0, 900); k.textContent = '0x' + hex().slice(0, 4) + '…' + hex().slice(0, 4); }, 140));
+      }
+      if (i === 3) {
+        const rs = $$('.txv-r', sc), go = $('.txv-go', sc); rs.forEach(r => r.className = 'txv-r'); go.classList.remove('ok'); go.textContent = 'Verifying…';
+        rs.forEach((r, k) => { sub.push(setTimeout(() => r.classList.add('cur'), 200 + k * 600)); sub.push(setTimeout(() => { r.classList.remove('cur'); r.classList.add('ok'); }, 700 + k * 600)); });
+        sub.push(setTimeout(() => { go.classList.add('ok'); go.textContent = 'Ready to sign · Face ID'; }, 700 + rs.length * 600));
+      }
+    };
+    const show = i => {
+      cur = i; clearSub();
+      items.forEach((b, k) => { b.classList.toggle('on', k === i); b.setAttribute('aria-selected', k === i); });
+      scenes.forEach((s, k) => s.classList.toggle('on', k === i));
+      title.textContent = titles[i]; run(i);
+      items[i].querySelector('.bar').style.animation = 'none'; void items[i].offsetWidth; items[i].querySelector('.bar').style.animation = '';
+      clearTimeout(timer); if (!reduce && !paused) timer = setTimeout(() => inView && show((cur + 1) % items.length), DUR);
+    };
+    items.forEach((b, k) => b.onclick = () => { paused = true; sec.classList.add('paused'); show(k); });
+    sec.style.setProperty('--sxd', DUR + 'ms');
+    new IntersectionObserver(([e]) => { const was = inView; inView = e.isIntersecting; if (inView && !was) show(cur); if (!inView) { clearTimeout(timer); clearSub(); } }, { threshold: .3 }).observe(sec);
+    show(0);
+  })();
+
+  /* ---------- explainer "video" player — narrated (voice-over + ambient music) ---------- */
+  (() => {
+    const vp = $('#vp'); if (!vp) return;
+    const scenes = $$('.vs', vp), N = scenes.length;
+    const VO = [
+      'Every business that wants its own crypto wallet hits the same wall. Key management, multi-chain support, swaps, bridges, security audits, and apps for every platform. Built in-house, that is twelve months or more of engineering — and the maintenance never ends.',
+      'reWallet changes that. It is a production-ready, decentralized wallet that you brand as your own, and deploy to iOS, Android, web and browser extension, in one go.',
+      'The first benefit is time. Instead of a year-long build, you go live in days, and start serving your users immediately.',
+      'The second is your team. There is no wallet engineering team to hire, train or retain. Your developers stay focused on your core product.',
+      'Third, future updates. New chains, new features and security patches are developed and pushed by us, so your wallet keeps improving without extra work on your side.',
+      'Need something specific? Request a new network, or bring your own dApps into the in-wallet browser, and our team will add them for you.',
+      'Behind the scenes, we run the complete architecture and tech stack — from the apps to the wallet engine, hosting and releases. Enterprise grade, and fully managed.',
+      'Everything is ready to deploy, at a single time. reWallet. One wallet, every network, complete control. Let us launch yours.',
+    ];
+    const CAP = VO.map(s => s.replace('R P C', 'RPC').replace('Let us', "Let's").replace(/\bIt is\b/g, "It's").replace(/\bthat is\b/g, "that's").replace(/\bThere is\b/g, "There's"));
+    const chNames = ['The problem', 'The solution', 'Time saving', 'Developer saving', 'Future updates', 'Special requests', 'Fully managed', 'Deploy'];
+    const DUR = VO.map(s => Math.max(6000, s.split(/\s+/).length / 2.55 * 1000 + 600)); // ~153 wpm estimate; narration end drives the cut
+    const TOTAL = DUR.reduce((a, b) => a + b, 0);
+    const seg = $('#vpSeg'), ch = $('#vpCh'), cap = $('#vpCap'), time = $('#vpTime'), sndBtn = $('#vpSnd'), chip = $('#vpChip');
+    seg.innerHTML = scenes.map((_, i) => `<button aria-label="Chapter ${i + 1}: ${chNames[i]}" style="flex:${DUR[i]}"><i></i></button>`).join('');
+    ch.innerHTML = chNames.map((n, i) => `<button>${i + 1}. ${n}</button>`).join('');
+    const bars = $$('i', seg);
+    let idx = 0, t = 0, playing = false, last = 0, raf, sound = false, spokeDone = false;
+    const mm = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    const before = i => DUR.slice(0, i).reduce((a, b) => a + b, 0);
+
+    /* ---- voice (Web Speech API) — sentence queue + Chrome keep-alive, never blocks the slides ---- */
+    const synth = window.speechSynthesis; let voice = null, keep, vToken = 0;
+    const pickVoice = () => {
+      const vs = synth ? synth.getVoices().filter(v => /^en(-|_)/i.test(v.lang)) : [];
+      const pref = [/Online \(Natural\)/i, /Natural/i, /Neural/i, /(Premium|Enhanced)/i, /Google US English/i, /Google UK English (Female|Male)/i, /^(Ava|Samantha|Allison|Serena|Daniel|Karen|Moira|Tessa)/i, /Microsoft (Aria|Jenny|Guy|Zira|David)/i];
+      for (const r of pref) { const v = vs.find(x => r.test(x.name)); if (v) return v; }
+      return vs.find(v => /en-US/i.test(v.lang)) || vs[0] || null;
+    };
+    if (synth) { voice = pickVoice(); synth.onvoiceschanged = () => { voice = pickVoice(); }; }
+    const stopVoice = () => { vToken++; clearInterval(keep); try { synth?.cancel(); } catch {} music.duck(false); };
+    const speak = i => {
+      if (!synth || !sound) { spokeDone = true; return; }
+      stopVoice(); spokeDone = false; const my = ++vToken;
+      const parts = (VO[i].match(/[^.!?—]+[.!?—]*/g) || [VO[i]]).map(s => s.replace(/—/g, ',').trim()).filter(Boolean);
+      let k = 0;
+      const next = () => {
+        if (my !== vToken) return;
+        if (k >= parts.length) { spokeDone = true; music.duck(false); clearInterval(keep); return; }
+        const u = new SpeechSynthesisUtterance(parts[k++]);
+        if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+        u.rate = voice && /Natural|Neural|Online/i.test(voice.name) ? 1 : .96; u.pitch = 1; u.volume = 1;
+        u.onstart = () => music.duck(true);
+        u.onend = () => setTimeout(next, 120);
+        u.onerror = () => setTimeout(next, 50);
+        synth.speak(u);
+      };
+      setTimeout(next, 80);
+      clearInterval(keep); keep = setInterval(() => { if (synth.speaking && !synth.paused) { synth.pause(); synth.resume(); } }, 9000);
+    };
+
+    /* ---- ambient score (Web Audio, generated): warm pad + sub bass + soft keys + light shaker, with reverb ---- */
+    const music = (() => {
+      let ac, out, bus, rev, on = false, timer, nextT = 0, step = 0;
+      const BPM = 82, beat = 60 / BPM;
+      const N = n => 440 * Math.pow(2, (n - 69) / 12);
+      const prog = [[48, [60, 64, 67, 71, 74]], [45, [57, 60, 64, 67, 71]], [41, [57, 60, 64, 65, 69]], [43, [55, 59, 62, 67, 69]]]; // Cmaj9 Am9 Fmaj9 G6/9
+      const impulse = () => { const len = ac.sampleRate * 3.2, b = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); } return b; };
+      const init = () => {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        out = ac.createGain(); out.gain.value = 0;
+        const comp = ac.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
+        bus = ac.createGain(); rev = ac.createConvolver(); rev.buffer = impulse();
+        const wet = ac.createGain(); wet.gain.value = .55;
+        bus.connect(comp); bus.connect(rev); rev.connect(wet); wet.connect(comp); comp.connect(out); out.connect(ac.destination);
+      };
+      const pad = (notes, t, d) => notes.forEach(n => {
+        const g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(500, t); f.frequency.linearRampToValueAtTime(1400, t + d * .5); f.frequency.linearRampToValueAtTime(700, t + d); f.Q.value = .4;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.022, t + 1.4); g.gain.setValueAtTime(.022, t + d - .8); g.gain.linearRampToValueAtTime(0, t + d + .6);
+        [-7, 0, 7].forEach(dt => { const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = N(n); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + d + .7); });
+        f.connect(g); g.connect(bus);
+      });
+      const bass = (n, t, d) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = N(n - 12 + 12); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + .08); g.gain.exponentialRampToValueAtTime(.04, t + d * .8); g.gain.linearRampToValueAtTime(0, t + d); o.connect(g); g.connect(out._dry || bus); o.start(t); o.stop(t + d + .05); };
+      const key = (n, t, v) => {
+        const g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2600;
+        [[1, 'triangle', 1], [2, 'sine', .35], [3, 'sine', .12]].forEach(([m, ty, a]) => { const o = ac.createOscillator(), og = ac.createGain(); o.type = ty; o.frequency.value = N(n) * m; og.gain.value = a; o.connect(og); og.connect(f); o.start(t); o.stop(t + 2.4); });
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05 * v, t + .008); g.gain.exponentialRampToValueAtTime(.0008, t + 2.2);
+        f.connect(g); g.connect(bus);
+      };
+      const shaker = t => { const len = ac.sampleRate * .06, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len); const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = b; f.type = 'highpass'; f.frequency.value = 7000; g.gain.value = .018; s.connect(f); f.connect(g); g.connect(bus); s.start(t); };
+      const ARP = [0, 2, 4, 2, 3, 1, 4, 2];
+      const schedule = () => {
+        while (nextT < ac.currentTime + .4) {
+          const bar = Math.floor(step / 8), s8 = step % 8, [root, ch] = prog[bar % 4], t = nextT;
+          if (s8 === 0) { pad(ch.slice(0, 4), t, beat * 4); bass(root, t, beat * 3.6); }
+          if (bar % 2 === 1 || bar > 3) key(ch[ARP[s8]] + 12, t, s8 % 2 ? .6 : 1);
+          if (bar > 1 && s8 % 2 === 1) shaker(t);
+          nextT += beat / 2; step++;
+        }
+      };
+      return {
+        start() {
+          if (on) return; on = true; if (!ac) init(); ac.resume();
+          nextT = ac.currentTime + .1; out.gain.cancelScheduledValues(ac.currentTime); out.gain.setValueAtTime(out.gain.value, ac.currentTime); out.gain.linearRampToValueAtTime(.9, ac.currentTime + 2);
+          schedule(); timer = setInterval(schedule, 120);
+        },
+        stop() { if (!on) return; on = false; clearInterval(timer); out.gain.cancelScheduledValues(ac.currentTime); out.gain.setValueAtTime(out.gain.value, ac.currentTime); out.gain.linearRampToValueAtTime(0, ac.currentTime + .8); },
+        duck(d) { if (!on || !out) return; out.gain.cancelScheduledValues(ac.currentTime); out.gain.setTargetAtTime(d ? .38 : .9, ac.currentTime, .35); },
+      };
+    })();
+
+    const setSound = v => {
+      sound = v; sndBtn.setAttribute('aria-pressed', v); sndBtn.setAttribute('aria-label', v ? 'Mute' : 'Turn sound on');
+      vp.classList.toggle('sound', v); chip.hidden = v || !vp.classList.contains('started');
+      if (v && playing) { music.start(); speak(idx); } else { music.stop(); stopVoice(); spokeDone = true; }
+    };
+
+    const counters = sc => $$('[data-to]', sc).forEach(el => {
+      const to = +el.dataset.to, suf = el.dataset.suf || '', dur = to === 100 ? 3400 : 2200, t0 = performance.now();
+      const st = n => { const p = Math.min((n - t0) / dur, 1); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suf; if (p < 1 && scenes[idx] === sc) requestAnimationFrame(st); };
+      requestAnimationFrame(st);
+    });
+    const show = i => {
+      idx = (i + N) % N; t = 0; spokeDone = false;
+      scenes.forEach((s, k) => { s.classList.remove('on'); if (k === idx) { void s.offsetWidth; s.classList.add('on'); } });
+      $$('button', ch).forEach((b, k) => b.classList.toggle('on', k === idx));
+      bars.forEach((b, k) => b.style.width = k < idx ? '100%' : '0');
+      cap.textContent = CAP[idx];
+      if (vp.classList.contains('started')) { counters(scenes[idx]); if (playing) speak(idx); }
+    };
+    const tick = n => {
+      if (!playing) return;
+      t += Math.max(0, n - last); last = n;
+      const D = DUR[idx];
+      bars[idx].style.width = Math.min(t / D * 100, 100) + '%';
+      if (t >= D && sound && !spokeDone) bars[idx].style.width = '100%';
+      time.textContent = `${mm((before(idx) + Math.min(t, D)) / 1000)} / ${mm(TOTAL / 1000)}`;
+      // advance when narration has finished (or sound is off) and the minimum scene time has passed;
+      // hard cap guards against a stalled speech engine so slides never freeze
+      const done = !sound || spokeDone;
+      if ((t >= D && done) || t >= D * 1.6) { if (idx === N - 1) { pause(true); bars[idx].style.width = '100%'; return; } show(idx + 1); }
+      raf = requestAnimationFrame(tick);
+    };
+    const play = () => {
+      const fresh = !vp.classList.contains('started');
+      vp.classList.add('started');
+      if (idx === N - 1 && t >= DUR[N - 1]) { t = 0; idx = 0; }
+      playing = true; vp.classList.add('playing'); $('#vpPlay').setAttribute('aria-label', 'Pause');
+      if (fresh) show(idx); else if (sound) speak(idx);
+      if (sound) music.start();
+      chip.hidden = sound;
+      last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+    };
+    const pause = ended => { playing = false; vp.classList.remove('playing'); $('#vpPlay').setAttribute('aria-label', 'Play'); cancelAnimationFrame(raf); stopVoice(); music.stop(); if (ended) chip.hidden = true; };
+    // Big play = user gesture → start with sound
+    $('#vpBig').onclick = () => { setSound(true); play(); };
+    chip.onclick = e => { e.stopPropagation(); setSound(true); if (!playing) play(); };
+    sndBtn.onclick = () => setSound(!sound);
+    $('#vpPlay').onclick = () => playing ? pause() : play();
+    $('.vp-screen', vp).addEventListener('click', e => { if (!e.target.closest('a,.vp-big,.vp-snd-chip') && vp.classList.contains('started')) playing ? pause() : play(); });
+    const jump = k => { vp.classList.add('started'); playing = true; vp.classList.add('playing'); show(k); if (sound) music.start(); last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); };
+    $$('button', seg).forEach((b, k) => b.onclick = () => jump(k));
+    $$('button', ch).forEach((b, k) => b.onclick = () => jump(k));
+    $('#vpFs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else vp.requestFullscreen?.(); };
+    vp.addEventListener('keydown', e => { if (e.key === ' ' && e.target === vp) { e.preventDefault(); playing ? pause() : play(); } });
+    show(0); time.textContent = `0:00 / ${mm(TOTAL / 1000)}`;
+    // silent preview when scrolled into view; sound needs a tap (browser autoplay rules)
+    let auto = false;
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !auto && !reduce) { auto = true; play(); }
+      if (!e.isIntersecting && playing) pause();
+    }, { threshold: .6 }).observe(vp);
+    addEventListener('pagehide', () => stopVoice());
+    document.addEventListener('visibilitychange', () => { if (document.hidden && playing) pause(); });
+  })();
+
+  /* ---------- hero globe (multi-chain arcs) ---------- */
+  (() => {
+    const cv = $('#globe'); if (!cv) return;
+    const ctx = cv.getContext('2d'); let S, R, dpr;
+    const size = () => { dpr = Math.min(devicePixelRatio || 1, 2); S = cv.clientWidth; R = S * .44; cv.width = S * dpr; cv.height = S * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    size(); addEventListener('resize', size);
+    const P = []; const n = 900, ga = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < n; i++) { const y = 1 - (i / (n - 1)) * 2, r = Math.sqrt(1 - y * y), th = ga * i; P.push([Math.cos(th) * r, y, Math.sin(th) * r]); }
+    const sph = (lat, lon) => { const a = lat * Math.PI / 180, b = lon * Math.PI / 180; return [Math.cos(a) * Math.cos(b), Math.sin(a), Math.cos(a) * Math.sin(b)]; };
+    const HUB = [['Ethereum', '#627eea', 40, -30], ['BNB Chain', '#f3ba2f', 22, 70], ['TRON', '#ff3b30', -10, 120], ['Arbitrum', '#28a0f0', 50, 20], ['Optimism', '#ff0420', 5, -80], ['Base', '#0052ff', -30, 10], ['Polygon', '#8247e5', -35, -60], ['Avalanche', '#e84142', 15, 170], ['Solana', '#14f195', -45, 140]].map(([n, c, la, lo]) => ({ n, c, p: sph(la, lo) }));
+    let arcs = [], rot = 0;
+    const tilt = -.35, ct = Math.cos(tilt), st = Math.sin(tilt);
+    const proj = ([x, y, z]) => { const cr = Math.cos(rot), sr = Math.sin(rot); let X = x * cr - z * sr, Z = x * sr + z * cr; let Y = y * ct - Z * st; Z = y * st + Z * ct; return [S / 2 + X * R, S / 2 - Y * R, Z]; };
+    const slerp = (a, b, t, lift) => { const d = Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))) || 1e-6, s1 = Math.sin((1 - t) * d) / Math.sin(d), s2 = Math.sin(t * d) / Math.sin(d), h = 1 + lift * Math.sin(Math.PI * t); return [(a[0] * s1 + b[0] * s2) * h, (a[1] * s1 + b[1] * s2) * h, (a[2] * s1 + b[2] * s2) * h]; };
+    let vis = true; new IntersectionObserver(([e]) => vis = e.isIntersecting).observe(cv);
+    const dark = () => document.documentElement.dataset.theme === 'dark';
+    const draw = () => {
+      if (vis) {
+        const dk = dark(); ctx.clearRect(0, 0, S, S); rot += reduce ? 0 : .0022;
+        const g = ctx.createRadialGradient(S / 2, S / 2, R * .2, S / 2, S / 2, R * 1.25);
+        g.addColorStop(0, dk ? 'rgba(112,0,255,.18)' : 'rgba(112,0,255,.08)'); g.addColorStop(1, 'rgba(112,0,255,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(S / 2, S / 2, R * 1.25, 0, 6.3); ctx.fill();
+        ctx.strokeStyle = dk ? 'rgba(201,176,255,.25)' : 'rgba(112,0,255,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(S / 2, S / 2, R, 0, 6.3); ctx.stroke();
+        for (const p of P) { const [x, y, z] = proj(p); if (z < -.15) continue; const a = (z + .15) / 1.15; ctx.fillStyle = dk ? `rgba(201,176,255,${a * .7})` : `rgba(112,0,255,${a * .6})`; ctx.fillRect(x - 1.1, y - 1.1, 2.2, 2.2); }
+        if (arcs.length < 5 && Math.random() < .03) { const a = HUB[(Math.random() * HUB.length) | 0]; let b = a; while (b === a) b = HUB[(Math.random() * HUB.length) | 0]; arcs.push({ a, b, t: 0 }); }
+        arcs = arcs.filter(r => (r.t += .006) < 1.6);
+        for (const r of arcs) {
+          ctx.beginPath(); let first = true;
+          for (let k = 0; k <= 40; k++) { const q = k / 40; if (q > r.t) break; const [x, y, z] = proj(slerp(r.a.p, r.b.p, q, .35)); if (z < -.2) { first = true; continue; } first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
+          const fade = r.t > 1 ? 1 - (r.t - 1) / .6 : 1;
+          ctx.strokeStyle = `rgba(0,200,255,${.7 * fade})`; ctx.lineWidth = 1.6; ctx.stroke();
+          if (r.t <= 1) { const [x, y, z] = proj(slerp(r.a.p, r.b.p, r.t, .35)); if (z > -.2) { const gg = ctx.createRadialGradient(x, y, 0, x, y, 9); gg.addColorStop(0, 'rgba(0,229,255,1)'); gg.addColorStop(1, 'rgba(0,229,255,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.3); ctx.fill(); } }
+        }
+        ctx.font = '600 11px "IBM Plex Sans",sans-serif'; ctx.textAlign = 'left';
+        for (const h of HUB) { const [x, y, z] = proj(h.p); if (z < 0) continue; const a = Math.min(1, z * 1.6);
+          ctx.globalAlpha = a; ctx.fillStyle = h.c; ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 6.3); ctx.fill();
+          ctx.strokeStyle = h.c; ctx.globalAlpha = a * .35; ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(performance.now() / 300 + x) * 2, 0, 6.3); ctx.stroke();
+          ctx.globalAlpha = a; ctx.fillStyle = dk ? '#e9e2ff' : '#2b1d52'; ctx.fillText(h.n, x + 10, y + 4); ctx.globalAlpha = 1; }
+      }
+      requestAnimationFrame(draw);
+    };
+    draw();
+  })();
+
+  /* ---------- live blocks ticker ---------- */
+  (() => {
+    const tr = $('.btrack'); if (!tr || reduce) return;
+    const C = [['Ethereum', '#627eea', 21458210], ['BNB Chain', '#f3ba2f', 44102331], ['TRON', '#ff3b30', 66901204], ['Arbitrum', '#28a0f0', 268110445], ['Base', '#0052ff', 22003918], ['Optimism', '#ff0420', 128440211]];
+    let x = 0, k = 0;
+    const add = () => { const c = C[k++ % C.length]; c[2] += 1 + ((Math.random() * 3) | 0); const d = document.createElement('div'); d.className = 'blk'; d.style.setProperty('--c', c[1]); d.innerHTML = `<b><i></i>${c[0]} #${c[2].toLocaleString('en-US')}</b>`; tr.appendChild(d); if (tr.children.length > 16) { x += tr.firstChild.offsetWidth; tr.firstChild.remove(); } };
+    for (let i = 0; i < 10; i++) add();
+    let off = 0, lt = performance.now();
+    const mv = n => { off += (n - lt) * .03; lt = n; tr.style.transform = `translateX(${-(off) + x}px)`; if (tr.scrollWidth + x - off < tr.parentElement.clientWidth + 200) add(); requestAnimationFrame(mv); };
+    requestAnimationFrame(mv);
   })();
 
   $('#yr').textContent = new Date().getFullYear();
