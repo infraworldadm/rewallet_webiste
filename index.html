@@ -26,6 +26,7 @@
     <a href="#top" class="brand" aria-label="reWallet home"><img class="logo-l" src="assets/logo-light.png" alt="reWallet" height="28"><img class="logo-d" src="assets/logo-dark.png" alt="" height="28"></a>
     <nav class="links" id="links">
       <a href="#features">Features</a>
+      <a href="#why">Why reWallet</a>
       <a href="#demo">Live Demo</a>
       <a href="#security">Security</a>
       <a href="#bridge">Bridge</a>
@@ -52,6 +53,7 @@
   <div class="aurora" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="hgrid" aria-hidden="true"></div>
   <div class="hspot" aria-hidden="true"></div>
+  <div class="blocks" aria-hidden="true"><div class="btrack"></div></div>
   <div class="wrap hero-grid">
     <div class="hero-copy">
       <a href="https://rewallet.online" class="pill reveal"><i class="dot"></i> rewallet.online · Decentralized · Non-custodial</a>
@@ -72,8 +74,7 @@
         <div class="float-chip c1"><img src="assets/usdt.png" alt=""> +32 USDT</div>
         <div class="float-chip c2"><span class="ok">✓</span> Swap complete</div>
         <div class="float-chip c3">⚡ Cashback +2.40 USDT</div>
-        <div class="h-orbit o1" aria-hidden="true"><span class="oc" style="--a:0deg"><b><img src="assets/usdt.png" alt=""></b></span><span class="oc" style="--a:120deg"><b><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627eea"/><path fill="#fff" fill-opacity=".6" d="M16.5 4v8.9l7.5 3.3z"/><path fill="#fff" d="M16.5 4 9 16.2l7.5-3.3z"/><path fill="#fff" fill-opacity=".6" d="M16.5 21.9V28l7.5-10.4z"/><path fill="#fff" d="M16.5 28v-6.1L9 17.6z"/></svg></b></span><span class="oc" style="--a:240deg"><b><img src="assets/bnb.png" alt=""></b></span></div>
-        <div class="h-orbit o2" aria-hidden="true"><span class="oc" style="--a:60deg"><b><img src="assets/tron.png" alt=""></b></span><span class="oc" style="--a:200deg"><b class="usdc">$</b></span><span class="oc" style="--a:320deg"><b class="arb">AR</b></span></div>
+        <canvas id="globe" aria-hidden="true"></canvas>
         <div class="phone tilt" data-phone="hero"></div>
       </div>
       <div class="qr-card">
@@ -88,8 +89,8 @@
 <!-- MARQUEE -->
 <section class="marquee" aria-label="Supported tokens and networks">
   <div class="track">
-    <span>BNB Chain</span><span>TRX</span><span>Ethereum</span><span>BSC</span><span>TRON</span><span>USDT</span><span>USDC</span><span>ERC20</span><span>TRC20</span><span>NFTs</span><span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span><span>Bitcoin</span>
-    <span>BNB Chain</span><span>TRX</span><span>Ethereum</span><span>BSC</span><span>TRON</span><span>USDT</span><span>USDC</span><span>ERC20</span><span>TRC20</span><span>NFTs</span><span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span><span>Bitcoin</span>
+    <span>BNB Chain</span><span>TRX</span><span>Ethereum</span><span>BSC</span><span>TRON</span><span>USDT</span><span>USDC</span><span>ERC20</span><span>TRC20</span><span>NFTs</span><span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span>
+    <span>BNB Chain</span><span>TRX</span><span>Ethereum</span><span>BSC</span><span>TRON</span><span>USDT</span><span>USDC</span><span>ERC20</span><span>TRC20</span><span>NFTs</span><span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span>
   </div>
 </section>
 
@@ -193,6 +194,120 @@
           <span>☆ Favorite tokens</span><span>◎ Networks</span>
         </div>
       </article>
+    </div>
+  </div>
+</section>
+
+<!-- WHY / EXPLAINER VIDEO -->
+<section id="why" class="sec why">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Why reWallet · 1-minute explainer</span>
+      <h2>Launch your own decentralized wallet — <span class="grad">without building one.</span></h2>
+      <p>The problem we solve, and what you get, in eight short scenes. Press play or jump to any chapter.</p>
+    </div>
+
+    <div class="vp reveal" id="vp">
+      <div class="vp-screen">
+        <div class="vp-bg" aria-hidden="true"><i></i><i></i><i></i></div>
+
+        <div class="vs" data-i="0">
+          <div class="vs-copy"><span class="vs-k">The problem</span><h3>Building a wallet in-house is slow, costly and never finished.</h3></div>
+          <div class="vs-vis prob">
+            <div class="pb"><span>Key management &amp; recovery</span><i style="--w:55%"></i></div>
+            <div class="pb"><span>Multi-chain support</span><i style="--w:72%"></i></div>
+            <div class="pb"><span>Swaps, bridge &amp; dApps</span><i style="--w:64%"></i></div>
+            <div class="pb"><span>Security reviews &amp; audits</span><i style="--w:80%"></i></div>
+            <div class="pb"><span>iOS, Android, Web &amp; extension</span><i style="--w:90%"></i></div>
+            <div class="pb"><span>Maintenance — forever</span><i style="--w:100%" class="inf"></i></div>
+            <div class="months"><b data-to="12">0</b><span>months+ before launch</span></div>
+          </div>
+        </div>
+
+        <div class="vs" data-i="1">
+          <div class="vs-copy"><span class="vs-k">The solution</span><h3>reWallet is a production-ready wallet you brand and deploy.</h3></div>
+          <div class="vs-vis sol">
+            <div class="mini-ph"><i class="mp-h"></i><i class="mp-b"></i><span class="mp-a"><i></i><i></i><i></i><i></i></span><i class="mp-r"></i><i class="mp-r"></i></div>
+            <div class="deploy">
+              <div class="dp-bar"><i></i></div><div class="dp-t"><span>Deploying your wallet…</span><b data-to="100" data-suf="%">0%</b></div>
+              <div class="dp-tags"><span>iOS</span><span>Android</span><span>Web</span><span>Extension</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vs" data-i="2">
+          <div class="vs-copy"><span class="vs-k">Benefit 01 · Time saving</span><h3>From months of engineering to days to launch.</h3></div>
+          <div class="vs-vis cmp">
+            <div class="cb"><span>Build in-house</span><div class="cbar"><i class="slow"></i></div><b>12+ months</b></div>
+            <div class="cb hi"><span>reWallet</span><div class="cbar"><i class="fast"></i></div><b>Days</b></div>
+            <div class="clock"><i></i><i></i></div>
+          </div>
+        </div>
+
+        <div class="vs" data-i="3">
+          <div class="vs-copy"><span class="vs-k">Benefit 02 · Developer saving</span><h3>No wallet team to hire. Your developers stay on your product.</h3></div>
+          <div class="vs-vis devs">
+            <div class="dgrid">
+              <i>iOS</i><i>Android</i><i>Web</i><i>Rust</i><i>Solidity</i><i>DevOps</i><i>Security</i><i>QA</i><i>Backend</i><i>Design</i><i>Node ops</i><b>1 integration</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="vs" data-i="4">
+          <div class="vs-copy"><span class="vs-k">Benefit 03 · Future updates</span><h3>We push every future update — you don't lift a finger.</h3></div>
+          <div class="vs-vis feed">
+            <div class="fi"><em>v2.4</em><span>New chain support · Base</span><b>Rolled out</b></div>
+            <div class="fi"><em>v2.5</em><span>Passkeys &amp; faster sign-in</span><b>Rolled out</b></div>
+            <div class="fi"><em>v2.6</em><span>Security patch · risk engine</span><b>Rolled out</b></div>
+            <div class="fi"><em>v2.7</em><span>New swap routes &amp; lower fees</span><b>Rolled out</b></div>
+          </div>
+        </div>
+
+        <div class="vs" data-i="5">
+          <div class="vs-copy"><span class="vs-k">Benefit 04 · Special requests</span><h3>Need a new network or a dApp in the browser? Just ask.</h3></div>
+          <div class="vs-vis req">
+            <div class="tk"><span class="tk-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5 14.5 9.5M8 11l-2 2a3.5 3.5 0 0 0 5 5l2-2M16 13l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></span><div><b>Add network · Sui</b><small>Requested by your team</small></div><em class="st"></em></div>
+            <div class="tk"><span class="tk-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></span><div><b>Add dApp · Uniswap in browser</b><small>Requested by your team</small></div><em class="st"></em></div>
+            <div class="tk"><span class="tk-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg></span><div><b>Custom token list &amp; branding</b><small>Requested by your team</small></div><em class="st"></em></div>
+          </div>
+        </div>
+
+        <div class="vs" data-i="6">
+          <div class="vs-copy"><span class="vs-k">Benefit 05 · Fully managed</span><h3>We run the complete architecture and tech stack.</h3></div>
+          <div class="vs-vis stack">
+            <div class="ly"><b>Apps</b><span>iOS · Android · Web · Browser extension</span></div>
+            <div class="ly"><b>Wallet UI &amp; SDK</b><span>Themes · white-label · integrations</span></div>
+            <div class="ly"><b>Features</b><span>Swap · Bridge · dApp browser · Cashback</span></div>
+            <div class="ly"><b>Security</b><span>Key management · biometrics · risk engine</span></div>
+            <div class="ly"><b>Infrastructure</b><span>Nodes · RPC · indexers · monitoring</span></div>
+          </div>
+        </div>
+
+        <div class="vs" data-i="7">
+          <div class="vs-copy center"><span class="vs-k">Ready when you are</span><h3>Everything ready to deploy — at a single time.</h3><a href="#contact" class="btn btn-primary">Launch your wallet <span class="arr">→</span></a></div>
+          <div class="vs-vis launch"><span class="rk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M14 4c3-1 6-1 6-1s0 3-1 6l-6 6-5-5z"/><circle cx="15" cy="9" r="1.5"/></svg></span><i class="trail"></i><span class="lp">iOS</span><span class="lp">Android</span><span class="lp">Web</span><span class="lp">Extension</span></div>
+        </div>
+
+        <button class="vp-big" id="vpBig" aria-label="Play explainer"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></button>
+        <div class="vp-cap" id="vpCap" aria-live="polite"></div>
+      </div>
+
+      <div class="vp-ctrl">
+        <button class="vp-btn" id="vpPlay" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg></button>
+        <div class="vp-seg" id="vpSeg"></div>
+        <span class="vp-time" id="vpTime">0:00 / 0:48</span>
+        <button class="vp-btn" id="vpFs" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      </div>
+      <div class="vp-ch" id="vpCh"></div>
+    </div>
+
+    <div class="why-cards">
+      <div class="wc reveal"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></i><b>Time saving</b><span>Launch in days instead of a year-long build.</span></div>
+      <div class="wc reveal"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M9 9l-2 2 2 2M15 9l2 2-2 2"/></svg></i><b>Developer saving</b><span>No wallet engineers to hire, train or retain.</span></div>
+      <div class="wc reveal"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.7-4.3L3 9M4 13a8 8 0 0 0 14.7 4.3L21 15M3 4v5h5M21 20v-5h-5"/></svg></i><b>Future updates</b><span>New features, chains and patches pushed by us.</span></div>
+      <div class="wc reveal"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></i><b>Special requests</b><span>Networks and in-browser dApps added on request.</span></div>
+      <div class="wc reveal"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></i><b>Fully managed stack</b><span>Architecture, infrastructure and tech stack handled.</span></div>
+      <div class="wc reveal"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M14 4c3-1 6-1 6-1s0 3-1 6l-6 6-5-5z"/><circle cx="15" cy="9" r="1.5"/></svg></i><b>Deploy at once</b><span>iOS, Android, Web and extension — together.</span></div>
     </div>
   </div>
 </section>
@@ -378,8 +493,9 @@
 <section id="networks" class="sec">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="eyebrow">Multi-network wallet</span>
-      <h2>One wallet to manage assets across <span class="grad">multiple blockchains.</span></h2>
+      <span class="eyebrow">Multi-chain by design</span>
+      <h2>One wallet. <span class="grad">Every chain you need.</span></h2>
+      <p>EVM and non-EVM chains side by side — Ethereum, BNB Chain and TRON live today, L2s next, and any network you need added on request.</p>
     </div>
     <div class="net-wrap reveal">
       <div class="orbit" id="orbit">
@@ -395,8 +511,12 @@
         <div>
           <h4>Coming soon</h4>
           <div class="netpills soon">
-            <span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span><span>Bitcoin</span>
+            <span>Polygon</span><span>Avalanche</span><span>Arbitrum</span><span>Optimism</span><span>Base</span><span>Solana</span>
           </div>
+        </div>
+        <div>
+          <h4>On request</h4>
+          <div class="netpills req"><span>+ Your network</span><span>+ Custom EVM via RPC</span><span>+ Your dApps in-browser</span></div>
         </div>
         <div class="fast-note">
           <b>Fast &amp; low-cost by design</b>
@@ -524,7 +644,7 @@
     </div>
     <div class="faq reveal">
       <details><summary>What does non-custodial mean?</summary><p>You alone hold your private keys and recovery phrase. reWallet never stores them on a server, so no one can freeze, move or access your assets without you.</p></details>
-      <details><summary>Which networks are supported?</summary><p>Ethereum, BNB Chain and TRON today. Polygon, Avalanche, Arbitrum, Optimism, Base, Solana and Bitcoin are coming soon. You can also add custom EVM networks via RPC and Chain ID.</p></details>
+      <details><summary>Which networks are supported?</summary><p>Ethereum, BNB Chain and TRON today. Polygon, Avalanche, Arbitrum, Optimism, Base and Solana are coming soon — and we add new networks on request. You can also add custom EVM networks via RPC and Chain ID.</p></details>
       <details><summary>How does reID cashback work?</summary><p>Connect your reID account and eligible transactions earn cashback automatically. Track pending, available, claimed and historical rewards inside the wallet.</p></details>
       <details><summary>What if I lose my phone?</summary><p>Restore your wallet on any device using your recovery phrase or private key. Keep your recovery phrase offline and never share it.</p></details>
       <details><summary>Can my company launch its own branded wallet?</summary><p>Yes. reWallet is white-label ready — logo, colors, app name, networks, default tokens, swap/bridge providers, cashback programs, fees and compliance settings are all configurable.</p></details>

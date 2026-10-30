@@ -588,7 +588,7 @@
   /* ---------- network orbit ---------- */
   const orbit = $('#orbit');
   const live = [['Ethereum', '#8b7cff'], ['BSC', '#f3ba2f'], ['TRON', '#ff3b30']];
-  const soon = ['Polygon', 'Avalanche', 'Arbitrum', 'Optimism', 'Base', 'Solana', 'Bitcoin'];
+  const soon = ['Polygon', 'Avalanche', 'Arbitrum', 'Optimism', 'Base', 'Solana'];
   const orbs = [];
   live.forEach(([n, c], i) => { const d = document.createElement('div'); d.className = 'orb live'; d.style.setProperty('--c', c); d.textContent = n; orbit.appendChild(d); orbs.push({ d, r: .41, a: i / live.length * Math.PI * 2, s: .00025 }); });
   soon.forEach((n, i) => { const d = document.createElement('div'); d.className = 'orb soon'; d.textContent = n; orbit.appendChild(d); orbs.push({ d, r: .25, a: i / soon.length * Math.PI * 2, s: -.0004 }); });
@@ -750,6 +750,127 @@
     sec.style.setProperty('--sxd', DUR + 'ms');
     new IntersectionObserver(([e]) => { const was = inView; inView = e.isIntersecting; if (inView && !was) show(cur); if (!inView) { clearTimeout(timer); clearSub(); } }, { threshold: .3 }).observe(sec);
     show(0);
+  })();
+
+  /* ---------- explainer "video" player ---------- */
+  (() => {
+    const vp = $('#vp'); if (!vp) return;
+    const scenes = $$('.vs', vp), N = scenes.length, D = 6000;
+    const caps = [
+      'Wallets take a year or more to build — and they need maintenance forever.',
+      'reWallet gives you a finished, decentralized wallet with your brand on it.',
+      'Skip the long build. Go live in days, not months.',
+      'No need to hire a wallet engineering team.',
+      'New features, chains and security patches are pushed by us, automatically.',
+      'Need another network or a dApp in the browser? Request it and we add it.',
+      'We operate the full architecture and tech stack behind your wallet.',
+      'iOS, Android, Web and extension — ready to deploy at a single time.',
+    ];
+    const chNames = ['The problem', 'The solution', 'Time saving', 'Developer saving', 'Future updates', 'Special requests', 'Fully managed', 'Deploy'];
+    const seg = $('#vpSeg'), ch = $('#vpCh'), cap = $('#vpCap'), time = $('#vpTime');
+    seg.innerHTML = scenes.map((_, i) => `<button aria-label="Chapter ${i + 1}: ${chNames[i]}"><i></i></button>`).join('');
+    ch.innerHTML = chNames.map((n, i) => `<button>${i + 1}. ${n}</button>`).join('');
+    const bars = $$('i', seg);
+    let idx = 0, t = 0, playing = false, last = 0, raf;
+    const mm = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    const counters = sc => $$('[data-to]', sc).forEach(el => {
+      const to = +el.dataset.to, suf = el.dataset.suf || '', dur = to === 100 ? 3400 : 2200, t0 = performance.now();
+      const st = n => { const p = Math.min((n - t0) / dur, 1); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suf; if (p < 1 && scenes[idx] === sc) requestAnimationFrame(st); };
+      requestAnimationFrame(st);
+    });
+    const show = i => {
+      idx = (i + N) % N; t = 0;
+      scenes.forEach((s, k) => { s.classList.remove('on'); if (k === idx) { void s.offsetWidth; s.classList.add('on'); } });
+      $$('button', ch).forEach((b, k) => b.classList.toggle('on', k === idx));
+      bars.forEach((b, k) => b.style.width = k < idx ? '100%' : '0');
+      cap.textContent = caps[idx];
+      if (vp.classList.contains('started')) counters(scenes[idx]);
+    };
+    const tick = n => {
+      if (!playing) return;
+      t += n - last; last = n;
+      bars[idx].style.width = Math.min(t / D * 100, 100) + '%';
+      time.textContent = `${mm((idx * D + t) / 1000)} / ${mm(N * D / 1000)}`;
+      if (t >= D) { if (idx === N - 1) { pause(); bars[idx].style.width = '100%'; return; } show(idx + 1); }
+      raf = requestAnimationFrame(tick);
+    };
+    const play = () => {
+      if (!vp.classList.contains('started')) { vp.classList.add('started'); show(idx); }
+      else if (idx === N - 1 && t >= D) show(0);
+      playing = true; vp.classList.add('playing'); $('#vpPlay').setAttribute('aria-label', 'Pause');
+      last = performance.now(); raf = requestAnimationFrame(tick);
+    };
+    const pause = () => { playing = false; vp.classList.remove('playing'); $('#vpPlay').setAttribute('aria-label', 'Play'); cancelAnimationFrame(raf); };
+    $('#vpBig').onclick = play;
+    $('#vpPlay').onclick = () => playing ? pause() : play();
+    $('.vp-screen', vp).addEventListener('click', e => { if (!e.target.closest('a,.vp-big') && vp.classList.contains('started')) playing ? pause() : play(); });
+    const jump = k => { vp.classList.add('started'); show(k); if (!playing) play(); };
+    $$('button', seg).forEach((b, k) => b.onclick = () => jump(k));
+    $$('button', ch).forEach((b, k) => b.onclick = () => jump(k));
+    $('#vpFs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else vp.requestFullscreen?.(); };
+    vp.addEventListener('keydown', e => { if (e.key === ' ') { e.preventDefault(); playing ? pause() : play(); } });
+    show(0);
+    let auto = false;
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !auto && !reduce) { auto = true; play(); }
+      if (!e.isIntersecting && playing) pause();
+    }, { threshold: .6 }).observe(vp);
+  })();
+
+  /* ---------- hero globe (multi-chain arcs) ---------- */
+  (() => {
+    const cv = $('#globe'); if (!cv) return;
+    const ctx = cv.getContext('2d'); let S, R, dpr;
+    const size = () => { dpr = Math.min(devicePixelRatio || 1, 2); S = cv.clientWidth; R = S * .44; cv.width = S * dpr; cv.height = S * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    size(); addEventListener('resize', size);
+    const P = []; const n = 900, ga = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < n; i++) { const y = 1 - (i / (n - 1)) * 2, r = Math.sqrt(1 - y * y), th = ga * i; P.push([Math.cos(th) * r, y, Math.sin(th) * r]); }
+    const sph = (lat, lon) => { const a = lat * Math.PI / 180, b = lon * Math.PI / 180; return [Math.cos(a) * Math.cos(b), Math.sin(a), Math.cos(a) * Math.sin(b)]; };
+    const HUB = [['Ethereum', '#627eea', 40, -30], ['BNB Chain', '#f3ba2f', 22, 70], ['TRON', '#ff3b30', -10, 120], ['Arbitrum', '#28a0f0', 50, 20], ['Optimism', '#ff0420', 5, -80], ['Base', '#0052ff', -30, 10], ['Polygon', '#8247e5', -35, -60], ['Avalanche', '#e84142', 15, 170], ['Solana', '#14f195', -45, 140]].map(([n, c, la, lo]) => ({ n, c, p: sph(la, lo) }));
+    let arcs = [], rot = 0;
+    const tilt = -.35, ct = Math.cos(tilt), st = Math.sin(tilt);
+    const proj = ([x, y, z]) => { const cr = Math.cos(rot), sr = Math.sin(rot); let X = x * cr - z * sr, Z = x * sr + z * cr; let Y = y * ct - Z * st; Z = y * st + Z * ct; return [S / 2 + X * R, S / 2 - Y * R, Z]; };
+    const slerp = (a, b, t, lift) => { const d = Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))) || 1e-6, s1 = Math.sin((1 - t) * d) / Math.sin(d), s2 = Math.sin(t * d) / Math.sin(d), h = 1 + lift * Math.sin(Math.PI * t); return [(a[0] * s1 + b[0] * s2) * h, (a[1] * s1 + b[1] * s2) * h, (a[2] * s1 + b[2] * s2) * h]; };
+    let vis = true; new IntersectionObserver(([e]) => vis = e.isIntersecting).observe(cv);
+    const dark = () => document.documentElement.dataset.theme === 'dark';
+    const draw = () => {
+      if (vis) {
+        const dk = dark(); ctx.clearRect(0, 0, S, S); rot += reduce ? 0 : .0022;
+        const g = ctx.createRadialGradient(S / 2, S / 2, R * .2, S / 2, S / 2, R * 1.25);
+        g.addColorStop(0, dk ? 'rgba(112,0,255,.18)' : 'rgba(112,0,255,.08)'); g.addColorStop(1, 'rgba(112,0,255,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(S / 2, S / 2, R * 1.25, 0, 6.3); ctx.fill();
+        ctx.strokeStyle = dk ? 'rgba(201,176,255,.25)' : 'rgba(112,0,255,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(S / 2, S / 2, R, 0, 6.3); ctx.stroke();
+        for (const p of P) { const [x, y, z] = proj(p); if (z < -.15) continue; const a = (z + .15) / 1.15; ctx.fillStyle = dk ? `rgba(201,176,255,${a * .7})` : `rgba(112,0,255,${a * .6})`; ctx.fillRect(x - 1.1, y - 1.1, 2.2, 2.2); }
+        if (arcs.length < 5 && Math.random() < .03) { const a = HUB[(Math.random() * HUB.length) | 0]; let b = a; while (b === a) b = HUB[(Math.random() * HUB.length) | 0]; arcs.push({ a, b, t: 0 }); }
+        arcs = arcs.filter(r => (r.t += .006) < 1.6);
+        for (const r of arcs) {
+          ctx.beginPath(); let first = true;
+          for (let k = 0; k <= 40; k++) { const q = k / 40; if (q > r.t) break; const [x, y, z] = proj(slerp(r.a.p, r.b.p, q, .35)); if (z < -.2) { first = true; continue; } first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
+          const fade = r.t > 1 ? 1 - (r.t - 1) / .6 : 1;
+          ctx.strokeStyle = `rgba(0,200,255,${.7 * fade})`; ctx.lineWidth = 1.6; ctx.stroke();
+          if (r.t <= 1) { const [x, y, z] = proj(slerp(r.a.p, r.b.p, r.t, .35)); if (z > -.2) { const gg = ctx.createRadialGradient(x, y, 0, x, y, 9); gg.addColorStop(0, 'rgba(0,229,255,1)'); gg.addColorStop(1, 'rgba(0,229,255,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.3); ctx.fill(); } }
+        }
+        ctx.font = '600 11px "IBM Plex Sans",sans-serif'; ctx.textAlign = 'left';
+        for (const h of HUB) { const [x, y, z] = proj(h.p); if (z < 0) continue; const a = Math.min(1, z * 1.6);
+          ctx.globalAlpha = a; ctx.fillStyle = h.c; ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 6.3); ctx.fill();
+          ctx.strokeStyle = h.c; ctx.globalAlpha = a * .35; ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(performance.now() / 300 + x) * 2, 0, 6.3); ctx.stroke();
+          ctx.globalAlpha = a; ctx.fillStyle = dk ? '#e9e2ff' : '#2b1d52'; ctx.fillText(h.n, x + 10, y + 4); ctx.globalAlpha = 1; }
+      }
+      requestAnimationFrame(draw);
+    };
+    draw();
+  })();
+
+  /* ---------- live blocks ticker ---------- */
+  (() => {
+    const tr = $('.btrack'); if (!tr || reduce) return;
+    const C = [['Ethereum', '#627eea', 21458210], ['BNB Chain', '#f3ba2f', 44102331], ['TRON', '#ff3b30', 66901204], ['Arbitrum', '#28a0f0', 268110445], ['Base', '#0052ff', 22003918], ['Optimism', '#ff0420', 128440211]];
+    let x = 0, k = 0;
+    const add = () => { const c = C[k++ % C.length]; c[2] += 1 + ((Math.random() * 3) | 0); const d = document.createElement('div'); d.className = 'blk'; d.style.setProperty('--c', c[1]); d.innerHTML = `<b><i></i>${c[0]} #${c[2].toLocaleString('en-US')}</b>`; tr.appendChild(d); if (tr.children.length > 16) { x += tr.firstChild.offsetWidth; tr.firstChild.remove(); } };
+    for (let i = 0; i < 10; i++) add();
+    let off = 0, lt = performance.now();
+    const mv = n => { off += (n - lt) * .03; lt = n; tr.style.transform = `translateX(${-(off) + x}px)`; if (tr.scrollWidth + x - off < tr.parentElement.clientWidth + 200) add(); requestAnimationFrame(mv); };
+    requestAnimationFrame(mv);
   })();
 
   $('#yr').textContent = new Date().getFullYear();
